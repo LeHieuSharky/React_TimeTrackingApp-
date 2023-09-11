@@ -48,10 +48,11 @@ const styles = StyleSheet.create({
   },
   titleModal: {
     justifyContent: 'flex-start',
+    marginBottom: 12,
   },
   signIn: {
     color: '#000000',
-    fontFamily: 'Inter-Regular',
+    fontFamily: 'Inter-Bold',
     fontSize: 24,
     fontStyle: 'normal',
     fontWeight: '700',
@@ -71,6 +72,30 @@ const styles = StyleSheet.create({
   },
   columnInput: {
     flexDirection: 'column',
+  },
+  modalPosition: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalView: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    backgroundColor: 'white',
+    borderRadius: 8,
+    alignItems: 'flex-start',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  buttonModal: {
+    alignSelf: 'center',
+    marginTop: 35,
   },
 });
 

@@ -1,6 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import styles from './styles';
 import {MOCK_DATA} from '../../mocks/items';
+import Card from '../../components/Card/card';
 import {
   SafeAreaView,
   StatusBar,
@@ -10,18 +11,47 @@ import {
   FlatList,
   Modal,
   Alert,
-  Pressable,
-  StyleSheet,
-  TextInput,
 } from 'react-native';
-import Card from '../../components/Card/Card';
+import InputField from '../../components/InputField/inputField';
+import TouchableOpacityComponent from '../../components/TouchableOpacity/touchableOpacity';
 
 function HomeScreen() {
   const [modalVisible, setModalVisible] = useState(false);
+  const [userName, setUserName] = useState('');
+  const [password, setPassword] = useState('');
 
   useEffect(preState => {
     setModalVisible(!preState);
   }, []);
+
+  const signIn = async () => {
+    try {
+      console.log(`UserName: ${userName}`);
+      console.log(`Password: ${password}`);
+      const response = await fetch(
+        'https://mt-qc.vietcap.com.vn/api/iam-external-service/v1/authentication/login',
+        {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            'grant-type': 'password',
+            'client-id': '8202ca6a-6d69-44c9-ad17-cb5596b92015',
+            'client-secret': 'FJ2jHe8exf8zyRm',
+          },
+          body: JSON.stringify({
+            username: userName,
+            password: password,
+          }),
+        },
+      );
+      const json = await response.json();
+
+      return json;
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   return (
     <SafeAreaView>
@@ -59,8 +89,8 @@ function HomeScreen() {
             Alert.alert('Modal has been closed.');
             setModalVisible(!modalVisible);
           }}>
-          <View style={styless.centeredView}>
-            <View style={styless.modalView}>
+          <View style={styles.modalPosition}>
+            <View style={styles.modalView}>
               {/* Sign in to your account */}
               <View style={styles.titleModal}>
                 <Text style={styles.signIn}>Sign in</Text>
@@ -68,24 +98,32 @@ function HomeScreen() {
               </View>
               {/* Text input for userName password */}
               <View style={styles.columnInput}>
-                <TextInput
-                  style={styles.timeInput}
-                  onChangeText={() => {}}
-                  placeholder="068C121214"
-                  keyboardType="default"
+                {/* useName */}
+                <InputField
+                  placeholder={'068C121214'}
+                  keyboardType={'default'}
+                  selectionColor={'#2D9CDB'}
+                  title={'Username'}
+                  onChangeText={newText => setUserName(newText)}
+                  value={userName}
                 />
-                <TextInput
-                  style={styles.timeInput}
-                  onChangeText={() => {}}
-                  placeholder="vcsc1234"
-                  keyboardType="default"
+                {/* password */}
+                <InputField
+                  placeholder={'vcsc1234'}
+                  keyboardType={'default'}
+                  selectionColor={'#2D9CDB'}
+                  title={'Password'}
+                  onChangeText={newText => setPassword(newText)}
+                  value={password}
                 />
               </View>
-              <Pressable
-                style={[styless.button, styless.buttonClose]}
-                onPress={() => setModalVisible(!modalVisible)}>
-                <Text style={styless.textStyle}>Hide Modal</Text>
-              </Pressable>
+              {/* Sign in button */}
+              <View style={styles.buttonModal}>
+                <TouchableOpacityComponent
+                  content={'Sign in'}
+                  onPress={() => signIn()}
+                />
+              </View>
             </View>
           </View>
         </Modal>
@@ -93,49 +131,5 @@ function HomeScreen() {
     </SafeAreaView>
   );
 }
-
-const styless = StyleSheet.create({
-  centeredView: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 22,
-  },
-  modalView: {
-    paddingHorizontal: 45,
-    backgroundColor: 'white',
-    borderRadius: 8,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  button: {
-    borderRadius: 20,
-    padding: 10,
-    elevation: 2,
-    paddingTop: 50,
-  },
-  buttonOpen: {
-    backgroundColor: '#F194FF',
-  },
-  buttonClose: {
-    backgroundColor: '#2196F3',
-  },
-  textStyle: {
-    color: 'white',
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  modalText: {
-    marginBottom: 15,
-    textAlign: 'center',
-  },
-});
 
 export default HomeScreen;
