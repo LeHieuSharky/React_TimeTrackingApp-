@@ -11,16 +11,20 @@ import {
   FlatList,
   Modal,
   Alert,
+  Image,
 } from 'react-native';
 import InputField from '../../components/InputField/inputField';
 import TouchableOpacityComponent from '../../components/TouchableOpacity/touchableOpacity';
 import jwt_decode from 'jwt-decode';
-
+import DatePicker from 'react-native-date-picker';
 function HomeScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [userName, setUserName] = useState('');
   const [password, setPassword] = useState('');
   const [sayHello, setSayHello] = useState('');
+  const [flipDropDown, setFlipDropDown] = useState(false);
+  const [showTime, setShowTime] = useState(new Date());
+  const [showDateTimePicker, setDateTimePicker] = useState(false);
 
   useEffect(preState => {
     setModalVisible(!preState);
@@ -42,8 +46,10 @@ function HomeScreen() {
             'client-secret': 'FJ2jHe8exf8zyRm',
           },
           body: JSON.stringify({
-            username: userName,
-            password: password,
+            username: '068C121214',
+            password: 'vcsc1234',
+            // username: userName,
+            // password: password,
           }),
         },
       );
@@ -59,21 +65,57 @@ function HomeScreen() {
     }
   };
 
+  const formatMonth = month => {
+    var monthNames = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+    return monthNames[month];
+  };
+
+  const formatDay = day => {
+    var days = [
+      'Sunday',
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+    ];
+    return days[day];
+  };
+
   return (
     <SafeAreaView>
       <StatusBar />
       <View style={styles.parrentColumn}>
         {/* row  include: date, month, year and timePickerButton*/}
         <View style={styles.rowDateTime}>
-          <Text style={styles.timeDateMonth}>7 September</Text>
-          <Text style={styles.timeYear}>2023</Text>
-          <TouchableOpacity onPress={currentStatus => {}}>
-            <Text>DropDown</Text>
+          <Text
+            style={styles.timeDateMonth}>{`${showTime.getDate()} ${formatMonth(
+            showTime.getMonth(),
+          )}`}</Text>
+          <Text style={styles.timeYear}>{showTime.getFullYear()}</Text>
+          <TouchableOpacity onPress={() => setDateTimePicker(true)}>
+            <Image
+              source={require('/Users/administrator/Documents/react_native/TimeTrackingApp/src/assets/images/dropDown.png')}
+            />
           </TouchableOpacity>
         </View>
 
         {/* weekday*/}
-        <Text style={styles.weeksDay}>Wednesday</Text>
+        <Text style={styles.weeksDay}>{formatDay(showTime.getDay())}</Text>
 
         {/* say Hello useName */}
         <Text style={styles.sayHello}>{sayHello}</Text>
@@ -87,6 +129,17 @@ function HomeScreen() {
             keyExtractor={item => item.id}
           />
         )}
+        <DatePicker
+          modal
+          open={showDateTimePicker}
+          date={showTime}
+          mode="date"
+          onConfirm={date => {
+            setShowTime(date);
+            setDateTimePicker(false);
+          }}
+          onCancel={() => {}}
+        />
 
         {/*  */}
         <Modal
