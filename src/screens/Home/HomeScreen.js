@@ -14,11 +14,13 @@ import {
 } from 'react-native';
 import InputField from '../../components/InputField/inputField';
 import TouchableOpacityComponent from '../../components/TouchableOpacity/touchableOpacity';
+import jwt_decode from 'jwt-decode';
 
 function HomeScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [userName, setUserName] = useState('');
   const [password, setPassword] = useState('');
+  const [sayHello, setSayHello] = useState('');
 
   useEffect(preState => {
     setModalVisible(!preState);
@@ -46,7 +48,11 @@ function HomeScreen() {
         },
       );
       const json = await response.json();
-
+      const decodeData = jwt_decode(json.data.token);
+      if (decodeData !== undefined) {
+        setModalVisible(!modalVisible);
+      }
+      setSayHello(`Hello, ${decodeData.customerName}`);
       return json;
     } catch (error) {
       console.error(error);
@@ -70,15 +76,17 @@ function HomeScreen() {
         <Text style={styles.weeksDay}>Wednesday</Text>
 
         {/* say Hello useName */}
-        <Text style={styles.sayHello}>Hello, Lan Chi Team</Text>
+        <Text style={styles.sayHello}>{sayHello}</Text>
 
         {/* List of member card */}
-        <FlatList
-          style={styles.listCard}
-          data={MOCK_DATA}
-          renderItem={({item}) => <Card title={item.title} />}
-          keyExtractor={item => item.id}
-        />
+        {sayHello === '' ? null : (
+          <FlatList
+            style={styles.listCard}
+            data={MOCK_DATA}
+            renderItem={({item}) => <Card title={item.title} />}
+            keyExtractor={item => item.id}
+          />
+        )}
 
         {/*  */}
         <Modal
@@ -121,7 +129,9 @@ function HomeScreen() {
               <View style={styles.buttonModal}>
                 <TouchableOpacityComponent
                   content={'Sign in'}
-                  onPress={() => signIn()}
+                  onPress={() => {
+                    signIn();
+                  }}
                 />
               </View>
             </View>
