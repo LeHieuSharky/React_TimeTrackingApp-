@@ -45,6 +45,7 @@ const styles = StyleSheet.create({
   },
   listCard: {
     paddingTop: 22,
+    height: 600,
   },
   titleModal: {
     justifyContent: 'flex-start',
@@ -96,6 +97,15 @@ const styles = StyleSheet.create({
   buttonModal: {
     alignSelf: 'center',
     marginTop: 35,
+  },
+  floatingButton: {
+    position: 'absolute',
+    width: 30,
+    height: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    right: 20,
+    bottom: 0,
   },
 });
 

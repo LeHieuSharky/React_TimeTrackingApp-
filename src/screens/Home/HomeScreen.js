@@ -25,6 +25,7 @@ function HomeScreen() {
   const [flipDropDown, setFlipDropDown] = useState(false);
   const [showTime, setShowTime] = useState(new Date());
   const [showDateTimePicker, setDateTimePicker] = useState(false);
+  const [showAddMemnberModal, setShowAddMemberModal] = useState(false);
 
   useEffect(preState => {
     setModalVisible(!preState);
@@ -55,10 +56,8 @@ function HomeScreen() {
       );
       const json = await response.json();
       const decodeData = jwt_decode(json.data.token);
-      if (decodeData !== undefined) {
-        setModalVisible(!modalVisible);
-      }
       setSayHello(`Hello, ${decodeData.customerName}`);
+      setModalVisible(!modalVisible);
       return json;
     } catch (error) {
       console.error(error);
@@ -125,10 +124,14 @@ function HomeScreen() {
           <FlatList
             style={styles.listCard}
             data={MOCK_DATA}
-            renderItem={({item}) => <Card title={item.title} />}
+            renderItem={({item}) => (
+              <Card fullName={item.fullName} title={item.title} />
+            )}
             keyExtractor={item => item.id}
           />
         )}
+
+        {/* Date time picker */}
         <DatePicker
           modal
           open={showDateTimePicker}
@@ -141,7 +144,7 @@ function HomeScreen() {
           onCancel={() => {}}
         />
 
-        {/*  */}
+        {/* Sign in Modal */}
         <Modal
           animationType="slide"
           transparent={true}
@@ -190,6 +193,67 @@ function HomeScreen() {
             </View>
           </View>
         </Modal>
+
+        {/* add new member Modal */}
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={showAddMemnberModal}
+          onRequestClose={() => {
+            Alert.alert('Modal has been closed.');
+            setModalVisible(!showAddMemnberModal);
+          }}>
+          <View style={styles.modalPosition}>
+            <View style={styles.modalView}>
+              {/* Sign in to your account */}
+              <View style={styles.titleModal}>
+                <Text style={styles.signIn}>Add a member</Text>
+                <Text style={styles.toYourAccount}>to your team</Text>
+              </View>
+              {/* Text input for userName password */}
+              <View style={styles.columnInput}>
+                {/* useName */}
+                <InputField
+                  placeholder={'Enter your member name'}
+                  keyboardType={'default'}
+                  selectionColor={'#2D9CDB'}
+                  title={'Full name'}
+                  onChangeText={newText => {}}
+                  value={userName}
+                />
+                {/* password */}
+                <InputField
+                  placeholder={'Enter your member title'}
+                  keyboardType={'default'}
+                  selectionColor={'#2D9CDB'}
+                  title={'Title'}
+                  onChangeText={newText => {}}
+                  value={password}
+                />
+              </View>
+              {/* Sign in button */}
+              <View style={styles.buttonModal}>
+                <TouchableOpacityComponent
+                  content={'Save'}
+                  onPress={() => {
+                    setShowAddMemberModal(false);
+                  }}
+                />
+              </View>
+            </View>
+          </View>
+        </Modal>
+
+        {/* floating button */}
+        {sayHello === '' ? null : (
+          <TouchableOpacity
+            style={styles.floatingButton}
+            onPress={() => setShowAddMemberModal(true)}>
+            <Image
+              source={require('/Users/administrator/Documents/react_native/TimeTrackingApp/src/assets/images/plus.png')}
+            />
+          </TouchableOpacity>
+        )}
       </View>
     </SafeAreaView>
   );

@@ -18,7 +18,6 @@ const styles = StyleSheet.create({
   circle: {
     width: 30,
     height: 30,
-    backgroundColor: '#6FCF97',
     borderRadius: 1000,
     marginRight: 16,
   },
