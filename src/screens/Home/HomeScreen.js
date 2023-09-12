@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import styles from './styles';
 import {MOCK_DATA} from '../../mocks/items';
-import Card from '../../components/Card/card';
+import CardComponent from '../../components/Card/card';
 import {
   SafeAreaView,
   StatusBar,
@@ -12,22 +12,29 @@ import {
   Modal,
   Alert,
   Image,
+  Dimensions,
 } from 'react-native';
+
 import InputField from '../../components/InputField/inputField';
 import TouchableOpacityComponent from '../../components/TouchableOpacity/touchableOpacity';
 import jwt_decode from 'jwt-decode';
 import DatePicker from 'react-native-date-picker';
+import {useKeyboard} from '../../services/heightKeyboard';
 function HomeScreen() {
-  const [modalVisible, setModalVisible] = useState(false);
+  const [showSignInModal, setShowSignInModal] = useState(false);
   const [userName, setUserName] = useState('');
   const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [title, setTitle] = useState('');
   const [sayHello, setSayHello] = useState('');
-  const [flipDropDown, setFlipDropDown] = useState(false);
   const [showTime, setShowTime] = useState(new Date());
   const [showDateTimePicker, setDateTimePicker] = useState(false);
+  const [showAddMemnberModal, setShowAddMemberModal] = useState(false);
+  const [listMember, setListMember] = useState(MOCK_DATA);
+  const keyboardHeight = useKeyboard();
 
   useEffect(preState => {
-    setModalVisible(!preState);
+    setShowSignInModal(!preState);
   }, []);
 
   const signIn = async () => {
@@ -55,10 +62,8 @@ function HomeScreen() {
       );
       const json = await response.json();
       const decodeData = jwt_decode(json.data.token);
-      if (decodeData !== undefined) {
-        setModalVisible(!modalVisible);
-      }
       setSayHello(`Hello, ${decodeData.customerName}`);
+      setShowSignInModal(!showSignInModal);
       return json;
     } catch (error) {
       console.error(error);
@@ -96,9 +101,15 @@ function HomeScreen() {
     return days[day];
   };
 
+  const marginOfModal = () =>
+    keyboardHeight === 0
+      ? Dimensions.get('window').height / 3.5
+      : Dimensions.get('window').height / 1.7 - keyboardHeight;
+
   return (
     <SafeAreaView>
       <StatusBar />
+
       <View style={styles.parrentColumn}>
         {/* row  include: date, month, year and timePickerButton*/}
         <View style={styles.rowDateTime}>
@@ -124,11 +135,15 @@ function HomeScreen() {
         {sayHello === '' ? null : (
           <FlatList
             style={styles.listCard}
-            data={MOCK_DATA}
-            renderItem={({item}) => <Card title={item.title} />}
+            data={listMember}
+            renderItem={({item}) => (
+              <CardComponent fullName={item.fullName} title={item.title} />
+            )}
             keyExtractor={item => item.id}
           />
         )}
+
+        {/* Date time picker */}
         <DatePicker
           modal
           open={showDateTimePicker}
@@ -138,19 +153,110 @@ function HomeScreen() {
             setShowTime(date);
             setDateTimePicker(false);
           }}
-          onCancel={() => {}}
+          onCancel={() => {
+            setDateTimePicker(false);
+          }}
         />
 
-        {/*  */}
+        {/* add new member Modal */}
         <Modal
           animationType="slide"
           transparent={true}
-          visible={modalVisible}
+          visible={showAddMemnberModal}
           onRequestClose={() => {
             Alert.alert('Modal has been closed.');
-            setModalVisible(!modalVisible);
+            setShowSignInModal(!showAddMemnberModal);
           }}>
-          <View style={styles.modalPosition}>
+          <TouchableOpacity
+            style={{
+              height: Dimensions.get('window').height,
+              width: Dimensions.get('window').width,
+            }}
+            onPress={() => {
+              setShowAddMemberModal(false);
+            }}>
+            <View
+              style={[
+                styles.modalPosition,
+                {
+                  marginTop: marginOfModal(),
+                },
+              ]}>
+              <View style={styles.modalView}>
+                {/* Sign in to your account */}
+                <View style={styles.titleModal}>
+                  <Text style={styles.signIn}>Add a member</Text>
+                  <Text style={styles.toYourAccount}>to your team</Text>
+                </View>
+                {/* Text input for userName password */}
+                <View style={styles.columnInput}>
+                  {/* useName */}
+                  <InputField
+                    placeholder={'Enter your member name'}
+                    keyboardType={'default'}
+                    selectionColor={'#2D9CDB'}
+                    title={'Full name'}
+                    onChangeText={newText => setFullName(newText)}
+                    value={fullName}
+                  />
+                  {/* password */}
+                  <InputField
+                    placeholder={'Enter your member title'}
+                    keyboardType={'default'}
+                    selectionColor={'#2D9CDB'}
+                    title={'Title'}
+                    onChangeText={newText => setTitle(newText)}
+                    value={title}
+                  />
+                </View>
+                {/* Sign in button */}
+                <View style={styles.buttonModal}>
+                  <TouchableOpacityComponent
+                    content={'Save'}
+                    onPress={() => {
+                      const newObject = {
+                        id: '3ac68afc-c605-48d3-a4f8dfdfdfd7f63',
+                        fullName: fullName,
+                        title: title,
+                      };
+                      setListMember([...listMember, newObject]);
+                      setShowAddMemberModal(false);
+                    }}
+                  />
+                </View>
+              </View>
+            </View>
+          </TouchableOpacity>
+        </Modal>
+
+        {/* floating button */}
+        {sayHello === '' ? null : (
+          <TouchableOpacity
+            style={styles.floatingButton}
+            onPress={() => setShowAddMemberModal(true)}>
+            <Image
+              source={require('/Users/administrator/Documents/react_native/TimeTrackingApp/src/assets/images/plus.png')}
+            />
+          </TouchableOpacity>
+        )}
+      </View>
+      {/* Sign in Modal */}
+      <View style={{backgroundColor: '#BDBDBD', height: '100%'}}>
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={showSignInModal}
+          onRequestClose={() => {
+            Alert.alert('Modal has been closed.');
+            setShowSignInModal(!showSignInModal);
+          }}>
+          <View
+            style={[
+              styles.modalPosition,
+              {
+                marginTop: marginOfModal(),
+              },
+            ]}>
             <View style={styles.modalView}>
               {/* Sign in to your account */}
               <View style={styles.titleModal}>
