@@ -1,23 +1,41 @@
 import styles from './styles';
 import React, {useState} from 'react';
 import {Text, TextInput, View} from 'react-native';
-function Card(params) {
+function CardComponent(params) {
   const [hourInput, setHourInput] = useState('--');
   const [minuteInput, setMinuteInput] = useState('--');
 
   const compareTime = () => {
     const timeA = `${hourInput}:${minuteInput}`;
-    const timeB = '08:30';
+    const listTime = ['08:00', '08:30', '09:00'];
+    const currentDate = new Date();
 
-    const dateA = new Date(`2023-01-01T${timeA}:00`);
-    const dateB = new Date(`2023-01-01T${timeB}:00`);
+    const dateA = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      currentDate.getDate(),
+      parseInt(timeA.split(':')[0], 10),
+      parseInt(timeA.split(':')[1], 10),
+    );
+    const dateB = time =>
+      new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth(),
+        currentDate.getDate(),
+        parseInt(time.split(':')[0], 10),
+        parseInt(time.split(':')[1], 10),
+      );
 
-    if (dateA < dateB) {
+    if (dateA < dateB(listTime[0])) {
       return '#56CCF2';
-    } else if (dateA > dateB) {
-      return '#F2C94C';
+    } else if (dateA < dateB(listTime[1])) {
+      return '#6FCF97';
+    } else if (dateA < dateB(listTime[2])) {
+      return '##F2C94C';
+    } else if (dateA >= dateB(listTime[2])) {
+      return '#EB5757';
     } else {
-      return '#D9D9D9';
+      return '#D9D9D9 ';
     }
   };
 
@@ -75,4 +93,4 @@ function Card(params) {
   );
 }
 
-export default Card;
+export default CardComponent;
