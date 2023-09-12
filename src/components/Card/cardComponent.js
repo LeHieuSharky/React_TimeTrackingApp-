@@ -1,7 +1,8 @@
 import styles from './styles';
 import React, {useState} from 'react';
 import {Text, TextInput, View} from 'react-native';
-function CardComponent(params) {
+
+export default function CardComponent(params) {
   const [hourInput, setHourInput] = useState('--');
   const [minuteInput, setMinuteInput] = useState('--');
 
@@ -92,5 +93,3 @@ function CardComponent(params) {
     </View>
   );
 }
-
-export default CardComponent;
