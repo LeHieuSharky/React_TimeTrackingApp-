@@ -15,10 +15,11 @@
     "react": "18.2.0",
     "react-native": "0.72.4",
     "react-native-date-picker": "^4.2.14",
-    "react-native-sqlite-storage": "^6.0.1",
     "react-native-svg": "^13.13.0",
     "react-native-svg-transformer": "^1.1.0",
-    "redux": "^4.2.1"
+    "react-redux": "^8.1.2",
+    "redux": "^4.2.1",
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
