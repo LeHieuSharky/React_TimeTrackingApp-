@@ -32,10 +32,13 @@ function HomeScreen() {
   const [sayHello, setSayHello] = useState('');
   const [showTime, setShowTime] = useState(new Date());
   const [showDateTimePicker, setDateTimePicker] = useState(false);
+  const [idUser, setIdUser] = useState('');
   const [showAddMemnberModal, setShowAddMemberModal] = useState(false);
   const keyboardHeight = useKeyboard();
   const dispatch = useDispatch();
   const members = useSelector(state => state.members);
+  const listDate = members.filter(member => member.leaderId === idUser);
+  const listMember = listDate[0];
 
   useEffect(preState => {
     setShowSignInModal(!preState);
@@ -43,8 +46,6 @@ function HomeScreen() {
 
   const signIn = async () => {
     try {
-      console.log(`UserName: ${userName}`);
-      console.log(`Password: ${password}`);
       const response = await fetch(
         'https://mt-qc.vietcap.com.vn/api/iam-external-service/v1/authentication/login',
         {
@@ -66,6 +67,7 @@ function HomeScreen() {
       );
       const json = await response.json();
       const decodeData = jwt_decode(json.data.token);
+      setIdUser(decodeData.uuid);
       setSayHello(`Hello, ${decodeData.customerName}`);
       setShowSignInModal(!showSignInModal);
       return json;
@@ -111,13 +113,26 @@ function HomeScreen() {
       : Dimensions.get('window').height / 1.7 - keyboardHeight;
 
   const addMemberToList = () => {
-    const addMember = addNewMember({
-      id: uuidv4(),
-      time: showTime.toString().substring(0, 10),
-      fullName: fullName,
-      title: title,
-    });
-    console.log(members);
+    const choosedTime = showTime.toString().substring(0, 10);
+
+    let data = {
+      leaderId: idUser,
+      date: [
+        {
+          time: choosedTime,
+          members: [
+            {
+              memberId: uuidv4(),
+              fullName: fullName,
+              title: title,
+            },
+          ],
+        },
+      ],
+    };
+
+    const addMember = addNewMember(data);
+
     dispatch(addMember);
 
     setShowAddMemberModal(false);
@@ -152,7 +167,7 @@ function HomeScreen() {
         {sayHello === '' ? null : (
           <FlatList
             style={styles.listCard}
-            data={members}
+            data={listMember}
             renderItem={({item}) => (
               <CardComponent fullName={item.fullName} title={item.title} />
             )}
