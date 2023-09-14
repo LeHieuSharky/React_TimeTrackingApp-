@@ -9,6 +9,9 @@ import DatePicker from 'react-native-date-picker';
 import {useKeyboard} from '../../services/heightKeyboard';
 import CardComponent from '../../components/Card/cardComponent';
 import {useDispatch, useSelector} from 'react-redux';
+import {addMember} from '../../redux/HomeScreen/Members/memberSlice';
+import {addLoggedUser} from '../../redux/HomeScreen/Auth/authSlice';
+import {addNewDateTime} from '../../redux/HomeScreen/DateTime/dateTimeSlice';
 import {
   SafeAreaView,
   StatusBar,
@@ -21,7 +24,6 @@ import {
   Image,
   Dimensions,
 } from 'react-native';
-import {addNewMember} from '../../redux/HomeScreen/slice';
 
 function HomeScreen() {
   const [showSignInModal, setShowSignInModal] = useState(false);
@@ -37,9 +39,12 @@ function HomeScreen() {
   const keyboardHeight = useKeyboard();
   const dispatch = useDispatch();
   const members = useSelector(state => state.members);
-  const listDate = members.filter(member => member.leaderId === idUser);
-  const listMember = listDate[0];
-
+  const loggedUser = useSelector(state => state.loggedUser);
+  const listDateTime = useSelector(state => state.listDateTime);
+  // console.log(`logger user: ${JSON.stringify(loggedUser)}`);
+  console.log(`members: ${JSON.stringify(members)}`);
+  console.log(`listDateTime: ${JSON.stringify(listDateTime)}`);
+  const choosedTime = showTime.toString().substring(0, 10);
   useEffect(preState => {
     setShowSignInModal(!preState);
   }, []);
@@ -67,6 +72,7 @@ function HomeScreen() {
       );
       const json = await response.json();
       const decodeData = jwt_decode(json.data.token);
+
       setIdUser(decodeData.uuid);
       setSayHello(`Hello, ${decodeData.customerName}`);
       setShowSignInModal(!showSignInModal);
@@ -75,6 +81,14 @@ function HomeScreen() {
       console.error(error);
     }
   };
+
+  useEffect(() => {
+    const data = {
+      id: idUser,
+    };
+
+    dispatch(addLoggedUser(data));
+  }, [dispatch, idUser]);
 
   const formatMonth = month => {
     var monthNames = [
@@ -113,28 +127,18 @@ function HomeScreen() {
       : Dimensions.get('window').height / 1.7 - keyboardHeight;
 
   const addMemberToList = () => {
-    const choosedTime = showTime.toString().substring(0, 10);
-
-    let data = {
+    const data = {
       leaderId: idUser,
-      date: [
-        {
-          time: choosedTime,
-          members: [
-            {
-              memberId: uuidv4(),
-              fullName: fullName,
-              title: title,
-            },
-          ],
-        },
-      ],
+      memberId: uuidv4(),
+      fullName: fullName,
+      title: title,
     };
 
-    const addMember = addNewMember(data);
-
-    dispatch(addMember);
-
+    dispatch(addMember(data));
+    const checkDate = listDateTime.find(item => item === choosedTime);
+    if (typeof checkDate === 'undefined') {
+      dispatch(addNewDateTime({choosedTime}));
+    }
     setShowAddMemberModal(false);
   };
 
@@ -167,7 +171,7 @@ function HomeScreen() {
         {sayHello === '' ? null : (
           <FlatList
             style={styles.listCard}
-            data={listMember}
+            data={members}
             renderItem={({item}) => (
               <CardComponent fullName={item.fullName} title={item.title} />
             )}
