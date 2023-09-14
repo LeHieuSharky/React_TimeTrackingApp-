@@ -2,7 +2,6 @@ import {configureStore, combineReducers} from '@reduxjs/toolkit';
 import authReducer from './Auth/authSlice';
 import memberReducer from './Members/memberSlice';
 import dateTimeReducer from './DateTime/dateTimeSlice';
-import storage from 'redux-persist/lib/storage';
 import {persistReducer, persistStore} from 'redux-persist';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import thunk from 'redux-thunk';
