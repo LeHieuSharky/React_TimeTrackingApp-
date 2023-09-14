@@ -12,6 +12,7 @@ import {useDispatch, useSelector} from 'react-redux';
 import {addMember} from '../../redux/HomeScreen/Members/memberSlice';
 import {addLoggedUser} from '../../redux/HomeScreen/Auth/authSlice';
 import {addNewDateTime} from '../../redux/HomeScreen/DateTime/dateTimeSlice';
+
 import {
   SafeAreaView,
   StatusBar,
@@ -31,6 +32,7 @@ function HomeScreen() {
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [title, setTitle] = useState('');
+  const [leaderId, setLeaderId] = useState('');
   const [sayHello, setSayHello] = useState('');
   const [showTime, setShowTime] = useState(new Date());
   const [showDateTimePicker, setDateTimePicker] = useState(false);
@@ -42,6 +44,35 @@ function HomeScreen() {
   const loggedUser = useSelector(state => state.loggedUser);
   const listDateTime = useSelector(state => state.listDateTime);
   const choosedTime = showTime.toString().substring(0, 10);
+  const [showMember, setShowMember] = useState([]);
+  // console.log(`logger user: ${JSON.stringify(loggedUser)}`);
+  // console.log(`members: ${JSON.stringify(members)}`);
+  // console.log(`listDateTime: ${JSON.stringify(listDateTime)}`);
+
+  useEffect(() => {
+    console.log(choosedTime);
+    const choosedTimeData = listDateTime.filter(
+      time => time.time === choosedTime,
+    );
+    let memberArray = [];
+    if (choosedTimeData !== [] || choosedTimeData !== undefined) {
+      memberArray = choosedTimeData[0].members;
+    }
+    console.log(`choosedTime: ${JSON.stringify(choosedTimeData)}`);
+    console.log(`array: ${memberArray}`);
+    console.log(`Members: ${JSON.stringify(members)}`);
+
+    // memberArray.forEach(memberID => {
+    //   members.forEach(member => {
+    //     if (member.memberId === memberID) {
+    //       setShowMember([...showMember, member]);
+    //     }
+    //   });
+    // });
+
+    console.log(`show members: ${showMember}`);
+  }, [choosedTime, listDateTime, members, showMember]);
+
   useEffect(preState => {
     setShowSignInModal(!preState);
   }, []);
@@ -69,8 +100,7 @@ function HomeScreen() {
       );
       const json = await response.json();
       const decodeData = jwt_decode(json.data.token);
-
-      setIdUser(decodeData.uuid);
+      setIdUser(decodeData.accountNo);
       setSayHello(`Hello, ${decodeData.customerName}`);
       setShowSignInModal(!showSignInModal);
       return json;
