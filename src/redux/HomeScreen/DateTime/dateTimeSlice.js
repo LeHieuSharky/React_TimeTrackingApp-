@@ -5,7 +5,26 @@ export const dateTimeSlice = createSlice({
   initialState: [],
   reducers: {
     addNewDateTime: (state, action) => {
-      const newState = [...state, action.payload];
+      let newState = [...state];
+      if (action.payload.hasOwnProperty('time')) {
+        newState = [...newState, action.payload];
+      } else {
+        const index = newState.findIndex(
+          element => element.time === action.payload.checkTime,
+        );
+
+        let newArrayMember = [
+          ...newState[index].members,
+          action.payload.idMember,
+        ];
+
+        let newObj = {...newState[index]};
+
+        newObj.members = newArrayMember;
+        newState.splice(index, 1);
+        newState = [...newState, newObj];
+      }
+
       return newState;
     },
   },

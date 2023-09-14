@@ -17,15 +17,8 @@ export default store;
 
 [
   {
-    leaderId: 'a708541f-24c2-46a7-9b76-6e43c3657b0e',
-    memberId: 'b71819fd-963f-4781-add3-2dba54312f31',
-    fullName: 'Hieu',
-    title: 'Intern',
-  },
-  {
-    leaderId: 'a708541f-24c2-46a7-9b76-6e43c3657b0e',
-    memberId: 'f5ed1c59-12c3-4eab-865c-c2e5ee468130',
-    fullName: 'Nguyen',
-    title: 'Intern 2',
+    time: 'Thu Sep 14',
+    members: ['cfb32ffe-a691-4a55-b320-d0f60d6ccb3f'],
   },
 ];
+[{time: 'Thu Sep 14', members: ['40fed036-0195-41e9-8998-b6117f79e44e']}];

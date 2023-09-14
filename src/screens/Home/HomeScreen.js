@@ -41,7 +41,7 @@ function HomeScreen() {
   const members = useSelector(state => state.members);
   const loggedUser = useSelector(state => state.loggedUser);
   const listDateTime = useSelector(state => state.listDateTime);
-  // console.log(`logger user: ${JSON.stringify(loggedUser)}`);
+  console.log(`logger user: ${JSON.stringify(loggedUser)}`);
   console.log(`members: ${JSON.stringify(members)}`);
   console.log(`listDateTime: ${JSON.stringify(listDateTime)}`);
   const choosedTime = showTime.toString().substring(0, 10);
@@ -81,6 +81,8 @@ function HomeScreen() {
       console.error(error);
     }
   };
+
+  useEffect(() => {});
 
   useEffect(() => {
     const data = {
@@ -127,18 +129,33 @@ function HomeScreen() {
       : Dimensions.get('window').height / 1.7 - keyboardHeight;
 
   const addMemberToList = () => {
+    let idNewMember = uuidv4();
     const data = {
       leaderId: idUser,
-      memberId: uuidv4(),
+      memberId: idNewMember,
       fullName: fullName,
       title: title,
     };
 
     dispatch(addMember(data));
-    const checkDate = listDateTime.find(item => item === choosedTime);
+
+    const checkDate = listDateTime.find(item => item.time === choosedTime);
     if (typeof checkDate === 'undefined') {
-      dispatch(addNewDateTime({choosedTime}));
+      dispatch(
+        addNewDateTime({
+          time: choosedTime,
+          members: [idNewMember],
+        }),
+      );
+    } else {
+      dispatch(
+        addNewDateTime({
+          checkTime: choosedTime,
+          idMember: idNewMember,
+        }),
+      );
     }
+
     setShowAddMemberModal(false);
   };
 
