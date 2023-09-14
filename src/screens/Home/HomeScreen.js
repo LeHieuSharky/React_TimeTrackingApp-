@@ -41,9 +41,6 @@ function HomeScreen() {
   const members = useSelector(state => state.members);
   const loggedUser = useSelector(state => state.loggedUser);
   const listDateTime = useSelector(state => state.listDateTime);
-  console.log(`logger user: ${JSON.stringify(loggedUser)}`);
-  console.log(`members: ${JSON.stringify(members)}`);
-  console.log(`listDateTime: ${JSON.stringify(listDateTime)}`);
   const choosedTime = showTime.toString().substring(0, 10);
   useEffect(preState => {
     setShowSignInModal(!preState);
