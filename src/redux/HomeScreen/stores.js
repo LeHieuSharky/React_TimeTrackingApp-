@@ -1,12 +1,29 @@
-import {configureStore} from '@reduxjs/toolkit';
-import homeReducer from '../HomeScreen/slice';
+import {configureStore, combineReducers} from '@reduxjs/toolkit';
+import authReducer from './Auth/authSlice';
+import memberReducer from './Members/memberSlice';
+import dateTimeReducer from './DateTime/dateTimeSlice';
+import storage from 'redux-persist/lib/storage';
+import {persistReducer, persistStore} from 'redux-persist';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import thunk from 'redux-thunk';
 
-const rootReducer = {
-  members: homeReducer,
-};
-
-const store = configureStore({
-  reducer: rootReducer,
+const rootReducer = combineReducers({
+  members: memberReducer,
+  loggedUser: authReducer,
+  listDateTime: dateTimeReducer,
 });
 
-export default store;
+const persistConfig = {
+  key: 'tracking',
+  storage: AsyncStorage,
+};
+
+const persistedReducer = persistReducer(persistConfig, rootReducer);
+
+export const store = configureStore({
+  reducer: persistedReducer,
+  devTools: process.env.NODE_ENV !== 'production',
+  middleware: [thunk],
+});
+
+export const persistor = persistStore(store);
