@@ -1,10 +1,30 @@
 import styles from './styles';
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {Text, TextInput, View} from 'react-native';
+import {useDispatch, useSelector} from 'react-redux';
+import {
+  updateHourOfMember,
+  updateMinuteOfMember,
+} from '../../redux/HomeScreen/Members/memberSlice';
 
 export default function CardComponent(params) {
   const [hourInput, setHourInput] = useState('--');
   const [minuteInput, setMinuteInput] = useState('--');
+  const dispatch = useDispatch();
+  const members = useSelector(state => state.members);
+
+  useEffect(() => {
+    const foundMemberArr = members.filter(
+      member => member.memberId === params.id,
+    );
+    if (foundMemberArr.length > 0) {
+      const foundMember = foundMemberArr[0];
+      const hour = foundMember.hour;
+      const minute = foundMember.minute;
+      setHourInput(hour);
+      setMinuteInput(minute);
+    }
+  }, []);
 
   const compareTime = () => {
     const timeA = `${hourInput}:${minuteInput}`;
@@ -54,6 +74,12 @@ export default function CardComponent(params) {
           <TextInput
             style={styles.timeInput}
             onChangeText={value => {
+              dispatch(
+                updateHourOfMember({
+                  id: params.id,
+                  hour: value,
+                }),
+              );
               setHourInput(value);
             }}
             value={hourInput}
@@ -73,7 +99,15 @@ export default function CardComponent(params) {
           <Text style={styles.timeInput}>:</Text>
           <TextInput
             style={styles.timeInput}
-            onChangeText={value => setMinuteInput(value)}
+            onChangeText={value => {
+              dispatch(
+                updateMinuteOfMember({
+                  id: params.id,
+                  minute: value,
+                }),
+              );
+              setMinuteInput(value);
+            }}
             value={minuteInput}
             keyboardType="numeric"
             maxLength={2}

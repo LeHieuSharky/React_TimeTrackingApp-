@@ -45,6 +45,7 @@ function HomeScreen() {
   const listDateTime = useSelector(state => state.listDateTime);
   const choosedTime = showTime.toString().substring(0, 10);
   const [showMember, setShowMember] = useState([]);
+  console.log(`showmember: ${JSON.stringify(showMember)}`);
 
   const setDataToShow = () => {
     setShowMember([]);
@@ -90,7 +91,7 @@ function HomeScreen() {
             'client-secret': 'FJ2jHe8exf8zyRm',
           },
           body: JSON.stringify({
-            username: '068c121213',
+            username: '068C121214',
             password: 'vcsc1234',
             // username: userName,
             // password: password,
@@ -161,6 +162,9 @@ function HomeScreen() {
       memberId: idNewMember,
       fullName: fullName,
       title: title,
+      color: '',
+      hour: '--',
+      minute: '--',
     };
 
     dispatch(addMember(data));
@@ -217,7 +221,11 @@ function HomeScreen() {
             style={styles.listCard}
             data={showMember[0]}
             renderItem={({item}) => (
-              <CardComponent fullName={item.fullName} title={item.title} />
+              <CardComponent
+                fullName={item.fullName}
+                title={item.title}
+                id={item.memberId}
+              />
             )}
             keyExtractor={item => item.id}
           />
