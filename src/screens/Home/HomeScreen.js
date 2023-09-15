@@ -45,7 +45,7 @@ function HomeScreen() {
   const listDateTime = useSelector(state => state.listDateTime);
   const choosedTime = showTime.toString().substring(0, 10);
   const [showMember, setShowMember] = useState([]);
-  const [compareToday, setCompareToday] = useState(0);
+  const [compareToday, setCompareToday] = useState('today');
   const [visibilityAddMemberButton, setVisibilityAddMemberButton] =
     useState(false);
   const todayTime = new Date();
@@ -68,26 +68,34 @@ function HomeScreen() {
     return formattedDate;
   };
 
+  console.log(`data to show: ${JSON.stringify(showMember)}`);
+
   useEffect(() => {
-    if (compareToday === -1) {
+    console.log(`compareToday ${compareToday}`);
+    if (compareToday === 'future') {
       console.log('tomorrowwwwww');
       let showListMember = [];
+
       const leader = leaders.find(item => item.id === idUser);
+
       if (leader !== undefined) {
         let memberArray = [...leader.members];
+
         memberArray.forEach(memberID => {
           members.forEach(member => {
             if (member.memberId === memberID && member.leaderId === idUser) {
-              member.hour = '--';
-              member.minute = '--';
-              showListMember.push(member);
+              const newMember = {...member};
+              newMember.hour = '--';
+              newMember.minute = '--';
+
+              showListMember.push(newMember);
             }
           });
         });
-        console.log(`data tomorrow: ${showListMember}`);
+
         setShowMember(showListMember);
       }
-    } else if (compareToday === 1) {
+    } else if (compareToday === 'pastday') {
       console.log('yesterday');
       setShowMember([]);
       const choosedTimeData = listDateTime.filter(
@@ -105,9 +113,24 @@ function HomeScreen() {
           }
         });
       });
+      console.log(`pastday data: ${showListMember}`);
       setShowMember([showListMember]);
+    } else {
+      let showListMember = [];
+      const leader = leaders.find(item => item.id === idUser);
+      if (leader !== undefined) {
+        let memberArray = [...leader.members];
+        memberArray.forEach(memberID => {
+          members.forEach(member => {
+            if (member.memberId === memberID && member.leaderId === idUser) {
+              showListMember.push(member);
+            }
+          });
+        });
+        setShowMember(showListMember);
+      }
     }
-  }, [showTime]);
+  }, [compareToday]);
 
   useEffect(() => {
     console.log('todayyyyyyyyyy');
@@ -131,12 +154,12 @@ function HomeScreen() {
     const newTime = convertDate(showTime);
     if (today === newTime) {
       setVisibilityAddMemberButton(false);
-      setCompareToday(0);
+      setCompareToday('today');
     } else if (moment(today).isAfter(newTime)) {
-      setCompareToday(-1);
+      setCompareToday('pastday');
       setVisibilityAddMemberButton(true);
     } else {
-      setCompareToday(1);
+      setCompareToday('future');
       setVisibilityAddMemberButton(false);
     }
   }, [showTime]);
@@ -286,12 +309,15 @@ function HomeScreen() {
         {sayHello === '' ? null : (
           <FlatList
             style={styles.listCard}
-            data={showMember}
+            data={compareToday === 'pastday' ? showMember[0] : showMember}
             renderItem={({item}) => (
               <CardComponent
                 fullName={item.fullName}
                 title={item.title}
                 id={item.memberId}
+                hour={item.hour}
+                minute={item.minute}
+                color={'#D9D9D9'}
               />
             )}
             keyExtractor={item => item.id}

@@ -7,26 +7,29 @@ import {
   updateMinuteOfMember,
 } from '../../redux/HomeScreen/Members/memberSlice';
 
-export default function CardComponent(params) {
+export default function CardComponent(props) {
   const [hourInput, setHourInput] = useState('--');
   const [minuteInput, setMinuteInput] = useState('--');
   const dispatch = useDispatch();
-  const members = useSelector(state => state.members);
+  const [color, setColor] = useState('#D9D9D9');
 
   useEffect(() => {
-    const foundMemberArr = members.filter(
-      member => member.memberId === params.id,
-    );
-    if (foundMemberArr.length > 0) {
-      const foundMember = foundMemberArr[0];
-      const hour = foundMember.hour;
-      const minute = foundMember.minute;
-      setHourInput(hour);
-      setMinuteInput(minute);
-    }
+    setHourInput(props.hour);
+    setMinuteInput(props.minute);
   }, []);
 
-  const compareTime = () => {
+  useEffect(() => {
+    setHourInput(props.hour);
+    setMinuteInput(props.minute);
+    setColor(props.color);
+  }, [props.hour, props.minute, props.color]);
+
+  useEffect(() => {
+    const newColor = compareColor();
+    setColor(newColor);
+  }, [hourInput, minuteInput]);
+
+  const compareColor = () => {
     const timeA = `${hourInput}:${minuteInput}`;
     const listTime = ['08:00', '08:30', '09:00'];
     const currentDate = new Date();
@@ -64,10 +67,17 @@ export default function CardComponent(params) {
     <View style={styles.container}>
       <View style={styles.row}>
         <View style={styles.circleAndName}>
-          <View style={[styles.circle, {backgroundColor: compareTime()}]} />
+          <View
+            style={[
+              styles.circle,
+              {
+                backgroundColor: color,
+              },
+            ]}
+          />
           <View style={styles.fullNameAndTitleColumn}>
-            <Text style={styles.fullName}>{params.fullName}</Text>
-            <Text style={styles.title}>{params.title}</Text>
+            <Text style={styles.fullName}>{props.fullName}</Text>
+            <Text style={styles.title}>{props.title}</Text>
           </View>
         </View>
         <View style={styles.timePickerRow}>
@@ -76,7 +86,7 @@ export default function CardComponent(params) {
             onChangeText={value => {
               dispatch(
                 updateHourOfMember({
-                  id: params.id,
+                  id: props.id,
                   hour: value,
                 }),
               );
@@ -102,7 +112,7 @@ export default function CardComponent(params) {
             onChangeText={value => {
               dispatch(
                 updateMinuteOfMember({
-                  id: params.id,
+                  id: props.id,
                   minute: value,
                 }),
               );
