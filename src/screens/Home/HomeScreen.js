@@ -41,41 +41,40 @@ function HomeScreen() {
   const keyboardHeight = useKeyboard();
   const dispatch = useDispatch();
   const members = useSelector(state => state.members);
-  const loggedUser = useSelector(state => state.loggedUser);
+  // const loggedUser = useSelector(state => state.loggedUser);
   const listDateTime = useSelector(state => state.listDateTime);
   const choosedTime = showTime.toString().substring(0, 10);
   const [showMember, setShowMember] = useState([]);
-  // console.log(`logger user: ${JSON.stringify(loggedUser)}`);
-  // console.log(`members: ${JSON.stringify(members)}`);
-  // console.log(`listDateTime: ${JSON.stringify(listDateTime)}`);
 
-  useEffect(() => {
-    console.log(choosedTime);
+  const setDataToShow = () => {
+    setShowMember([]);
     const choosedTimeData = listDateTime.filter(
       time => time.time === choosedTime,
     );
     let memberArray = [];
-    if (choosedTimeData !== [] || choosedTimeData !== undefined) {
+    if (choosedTimeData.length > 0) {
       memberArray = choosedTimeData[0].members;
     }
-    console.log(`choosedTime: ${JSON.stringify(choosedTimeData)}`);
-    console.log(`array: ${memberArray}`);
-    console.log(`Members: ${JSON.stringify(members)}`);
+    let showListMember = [];
+    memberArray.forEach(memberID => {
+      members.forEach(member => {
+        if (member.memberId === memberID && member.leaderId === idUser) {
+          showListMember.push(member);
+        }
+      });
+    });
 
-    // memberArray.forEach(memberID => {
-    //   members.forEach(member => {
-    //     if (member.memberId === memberID) {
-    //       setShowMember([...showMember, member]);
-    //     }
-    //   });
-    // });
-
-    console.log(`show members: ${showMember}`);
-  }, [choosedTime, listDateTime, members, showMember]);
+    setShowMember([showListMember]);
+  };
 
   useEffect(preState => {
+    setDataToShow();
     setShowSignInModal(!preState);
   }, []);
+
+  useEffect(() => {
+    setDataToShow();
+  }, [showTime, members]);
 
   const signIn = async () => {
     try {
@@ -91,7 +90,7 @@ function HomeScreen() {
             'client-secret': 'FJ2jHe8exf8zyRm',
           },
           body: JSON.stringify({
-            username: '068C121214',
+            username: '068c121213',
             password: 'vcsc1234',
             // username: userName,
             // password: password,
@@ -165,6 +164,7 @@ function HomeScreen() {
     };
 
     dispatch(addMember(data));
+    setShowMember([...showMember, data]);
 
     const checkDate = listDateTime.find(item => item.time === choosedTime);
     if (typeof checkDate === 'undefined') {
@@ -215,7 +215,7 @@ function HomeScreen() {
         {sayHello === '' ? null : (
           <FlatList
             style={styles.listCard}
-            data={members}
+            data={showMember[0]}
             renderItem={({item}) => (
               <CardComponent fullName={item.fullName} title={item.title} />
             )}
