@@ -11,6 +11,26 @@ export default function App() {
       </PersistGate>
     </Provider>
   );
-
-  // return <HomeScreen />;
 }
+[
+  [
+    {
+      leaderId: '068C121214',
+      memberId: 'd41a7c17-be59-4247-8d6e-538fef020101',
+      fullName: '123',
+      title: '321',
+    },
+    {
+      leaderId: '068C121214',
+      memberId: '6bf2786f-f641-493d-94cd-f8aad66959c6',
+      fullName: '12321',
+      title: '321',
+    },
+    {
+      leaderId: '068C121214',
+      memberId: '2c70b4b8-ef0d-4517-ab92-07734ec83340',
+      fullName: '23',
+      title: '312',
+    },
+  ],
+];

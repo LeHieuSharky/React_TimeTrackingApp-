@@ -8,7 +8,7 @@ import thunk from 'redux-thunk';
 
 const rootReducer = combineReducers({
   members: memberReducer,
-  loggedUser: authReducer,
+  leaders: authReducer,
   listDateTime: dateTimeReducer,
 });
 
