@@ -12,6 +12,7 @@ import {useDispatch, useSelector} from 'react-redux';
 import {addMember} from '../../redux/HomeScreen/Members/memberSlice';
 import {addLoggedUser} from '../../redux/HomeScreen/Auth/authSlice';
 import {addNewDateTime} from '../../redux/HomeScreen/DateTime/dateTimeSlice';
+
 import {
   SafeAreaView,
   StatusBar,
@@ -31,6 +32,7 @@ function HomeScreen() {
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [title, setTitle] = useState('');
+  const [leaderId, setLeaderId] = useState('');
   const [sayHello, setSayHello] = useState('');
   const [showTime, setShowTime] = useState(new Date());
   const [showDateTimePicker, setDateTimePicker] = useState(false);
@@ -39,12 +41,40 @@ function HomeScreen() {
   const keyboardHeight = useKeyboard();
   const dispatch = useDispatch();
   const members = useSelector(state => state.members);
-  const loggedUser = useSelector(state => state.loggedUser);
+  // const loggedUser = useSelector(state => state.loggedUser);
   const listDateTime = useSelector(state => state.listDateTime);
   const choosedTime = showTime.toString().substring(0, 10);
+  const [showMember, setShowMember] = useState([]);
+
+  const setDataToShow = () => {
+    setShowMember([]);
+    const choosedTimeData = listDateTime.filter(
+      time => time.time === choosedTime,
+    );
+    let memberArray = [];
+    if (choosedTimeData.length > 0) {
+      memberArray = choosedTimeData[0].members;
+    }
+    let showListMember = [];
+    memberArray.forEach(memberID => {
+      members.forEach(member => {
+        if (member.memberId === memberID && member.leaderId === idUser) {
+          showListMember.push(member);
+        }
+      });
+    });
+
+    setShowMember([showListMember]);
+  };
+
   useEffect(preState => {
+    setDataToShow();
     setShowSignInModal(!preState);
   }, []);
+
+  useEffect(() => {
+    setDataToShow();
+  }, [showTime, members]);
 
   const signIn = async () => {
     try {
@@ -60,7 +90,7 @@ function HomeScreen() {
             'client-secret': 'FJ2jHe8exf8zyRm',
           },
           body: JSON.stringify({
-            username: '068C121214',
+            username: '068c121213',
             password: 'vcsc1234',
             // username: userName,
             // password: password,
@@ -69,8 +99,7 @@ function HomeScreen() {
       );
       const json = await response.json();
       const decodeData = jwt_decode(json.data.token);
-
-      setIdUser(decodeData.uuid);
+      setIdUser(decodeData.accountNo);
       setSayHello(`Hello, ${decodeData.customerName}`);
       setShowSignInModal(!showSignInModal);
       return json;
@@ -135,6 +164,7 @@ function HomeScreen() {
     };
 
     dispatch(addMember(data));
+    setShowMember([...showMember, data]);
 
     const checkDate = listDateTime.find(item => item.time === choosedTime);
     if (typeof checkDate === 'undefined') {
@@ -185,7 +215,7 @@ function HomeScreen() {
         {sayHello === '' ? null : (
           <FlatList
             style={styles.listCard}
-            data={members}
+            data={showMember[0]}
             renderItem={({item}) => (
               <CardComponent fullName={item.fullName} title={item.title} />
             )}
