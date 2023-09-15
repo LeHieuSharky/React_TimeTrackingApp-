@@ -10,9 +10,9 @@ import {useKeyboard} from '../../services/heightKeyboard';
 import CardComponent from '../../components/Card/cardComponent';
 import {useDispatch, useSelector} from 'react-redux';
 import {addMember} from '../../redux/HomeScreen/Members/memberSlice';
-import {addLoggedUser} from '../../redux/HomeScreen/Auth/authSlice';
+import {addLeader} from '../../redux/HomeScreen/Auth/authSlice';
 import {addNewDateTime} from '../../redux/HomeScreen/DateTime/dateTimeSlice';
-
+import {updateMemberOfLeader} from '../../redux/HomeScreen/Auth/authSlice';
 import {
   SafeAreaView,
   StatusBar,
@@ -41,41 +41,128 @@ function HomeScreen() {
   const keyboardHeight = useKeyboard();
   const dispatch = useDispatch();
   const members = useSelector(state => state.members);
-  // const loggedUser = useSelector(state => state.loggedUser);
+  const leaders = useSelector(state => state.leaders);
   const listDateTime = useSelector(state => state.listDateTime);
   const choosedTime = showTime.toString().substring(0, 10);
   const [showMember, setShowMember] = useState([]);
-  console.log(`showmember: ${JSON.stringify(showMember)}`);
-
-  const setDataToShow = () => {
-    setShowMember([]);
-    const choosedTimeData = listDateTime.filter(
-      time => time.time === choosedTime,
-    );
-    let memberArray = [];
-    if (choosedTimeData.length > 0) {
-      memberArray = choosedTimeData[0].members;
-    }
-    let showListMember = [];
-    memberArray.forEach(memberID => {
-      members.forEach(member => {
-        if (member.memberId === memberID && member.leaderId === idUser) {
-          showListMember.push(member);
-        }
-      });
-    });
-
-    setShowMember([showListMember]);
-  };
+  const [compareToday, setCompareToday] = useState('today');
+  const [visibilityAddMemberButton, setVisibilityAddMemberButton] =
+    useState(false);
+  const todayTime = new Date();
+  const moment = require('moment');
 
   useEffect(preState => {
-    setDataToShow();
     setShowSignInModal(!preState);
   }, []);
 
+  const convertDate = date => {
+    const originalDate = new Date(date);
+
+    // Extract year, month, and day components
+    const year = originalDate.getFullYear();
+    const month = String(originalDate.getMonth() + 1).padStart(2, '0'); // Add 1 to month since it's 0-based
+    const day = String(originalDate.getDate()).padStart(2, '0');
+
+    // Format the components into "YYYY-MM-DD" format
+    const formattedDate = `${year}-${month}-${day}`;
+    return formattedDate;
+  };
+
+  console.log(`data to show: ${JSON.stringify(showMember)}`);
+
   useEffect(() => {
-    setDataToShow();
-  }, [showTime, members]);
+    console.log(`compareToday ${compareToday}`);
+    if (compareToday === 'future') {
+      console.log('tomorrowwwwww');
+      let showListMember = [];
+
+      const leader = leaders.find(item => item.id === idUser);
+
+      if (leader !== undefined) {
+        let memberArray = [...leader.members];
+
+        memberArray.forEach(memberID => {
+          members.forEach(member => {
+            if (member.memberId === memberID && member.leaderId === idUser) {
+              const newMember = {...member};
+              newMember.hour = '--';
+              newMember.minute = '--';
+
+              showListMember.push(newMember);
+            }
+          });
+        });
+
+        setShowMember(showListMember);
+      }
+    } else if (compareToday === 'pastday') {
+      console.log('yesterday');
+      setShowMember([]);
+      const choosedTimeData = listDateTime.filter(
+        time => time.time === choosedTime,
+      );
+      let memberArray = [];
+      if (choosedTimeData.length > 0) {
+        memberArray = choosedTimeData[0].members;
+      }
+      let showListMember = [];
+      memberArray.forEach(memberID => {
+        members.forEach(member => {
+          if (member.memberId === memberID && member.leaderId === idUser) {
+            showListMember.push(member);
+          }
+        });
+      });
+      console.log(`pastday data: ${showListMember}`);
+      setShowMember([showListMember]);
+    } else {
+      let showListMember = [];
+      const leader = leaders.find(item => item.id === idUser);
+      if (leader !== undefined) {
+        let memberArray = [...leader.members];
+        memberArray.forEach(memberID => {
+          members.forEach(member => {
+            if (member.memberId === memberID && member.leaderId === idUser) {
+              showListMember.push(member);
+            }
+          });
+        });
+        setShowMember(showListMember);
+      }
+    }
+  }, [compareToday]);
+
+  useEffect(() => {
+    console.log('todayyyyyyyyyy');
+    let showListMember = [];
+    const leader = leaders.find(item => item.id === idUser);
+    if (leader !== undefined) {
+      let memberArray = [...leader.members];
+      memberArray.forEach(memberID => {
+        members.forEach(member => {
+          if (member.memberId === memberID && member.leaderId === idUser) {
+            showListMember.push(member);
+          }
+        });
+      });
+      setShowMember(showListMember);
+    }
+  }, [showSignInModal]);
+
+  useEffect(() => {
+    const today = convertDate(todayTime);
+    const newTime = convertDate(showTime);
+    if (today === newTime) {
+      setVisibilityAddMemberButton(false);
+      setCompareToday('today');
+    } else if (moment(today).isAfter(newTime)) {
+      setCompareToday('pastday');
+      setVisibilityAddMemberButton(true);
+    } else {
+      setCompareToday('future');
+      setVisibilityAddMemberButton(false);
+    }
+  }, [showTime]);
 
   const signIn = async () => {
     try {
@@ -100,6 +187,12 @@ function HomeScreen() {
       );
       const json = await response.json();
       const decodeData = jwt_decode(json.data.token);
+      const data = {
+        id: decodeData.accountNo,
+        members: [],
+      };
+
+      dispatch(addLeader(data));
       setIdUser(decodeData.accountNo);
       setSayHello(`Hello, ${decodeData.customerName}`);
       setShowSignInModal(!showSignInModal);
@@ -108,16 +201,6 @@ function HomeScreen() {
       console.error(error);
     }
   };
-
-  useEffect(() => {});
-
-  useEffect(() => {
-    const data = {
-      id: idUser,
-    };
-
-    dispatch(addLoggedUser(data));
-  }, [dispatch, idUser]);
 
   const formatMonth = month => {
     var monthNames = [
@@ -157,6 +240,7 @@ function HomeScreen() {
 
   const addMemberToList = () => {
     let idNewMember = uuidv4();
+
     const data = {
       leaderId: idUser,
       memberId: idNewMember,
@@ -167,7 +251,13 @@ function HomeScreen() {
       minute: '--',
     };
 
+    const leaderData = {
+      leaderId: idUser,
+      memberId: idNewMember,
+    };
+
     dispatch(addMember(data));
+    dispatch(updateMemberOfLeader(leaderData));
     setShowMember([...showMember, data]);
 
     const checkDate = listDateTime.find(item => item.time === choosedTime);
@@ -219,12 +309,15 @@ function HomeScreen() {
         {sayHello === '' ? null : (
           <FlatList
             style={styles.listCard}
-            data={showMember[0]}
+            data={compareToday === 'pastday' ? showMember[0] : showMember}
             renderItem={({item}) => (
               <CardComponent
                 fullName={item.fullName}
                 title={item.title}
                 id={item.memberId}
+                hour={item.hour}
+                minute={item.minute}
+                color={'#D9D9D9'}
               />
             )}
             keyExtractor={item => item.id}
@@ -312,7 +405,7 @@ function HomeScreen() {
         </Modal>
 
         {/* floating button */}
-        {sayHello === '' ? null : (
+        {sayHello === '' || visibilityAddMemberButton ? null : (
           <TouchableOpacity
             style={styles.floatingButton}
             onPress={() => setShowAddMemberModal(true)}>
