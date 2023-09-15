@@ -37,26 +37,3 @@ const {reducer, actions} = authSlice;
 export const {addLeader, updateMemberOfLeader} = actions;
 
 export default reducer;
-
-[
-  [
-    {
-      leaderId: '068C121214',
-      memberId: '3a03eda1-b144-4a81-b9b4-4c2d051863ce',
-      fullName: '',
-      title: '',
-      color: '',
-      hour: '--',
-      minute: '--',
-    },
-    {
-      leaderId: '068C121214',
-      memberId: 'affb14f2-1874-47dd-a374-d5f644de6a0d',
-      fullName: 'Hieu',
-      title: 'Ne',
-      color: '',
-      hour: '01',
-      minute: '22',
-    },
-  ],
-];
