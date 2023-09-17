@@ -13,18 +13,20 @@ import {addMember} from '../../redux/HomeScreen/Members/memberSlice';
 import {addLeader} from '../../redux/HomeScreen/Auth/authSlice';
 import {addNewDateTime} from '../../redux/HomeScreen/DateTime/dateTimeSlice';
 import {updateMemberOfLeader} from '../../redux/HomeScreen/Auth/authSlice';
+
 import {
   SafeAreaView,
   StatusBar,
   Text,
   TouchableOpacity,
   View,
-  FlatList,
   Modal,
+  FlatList,
   Alert,
   Image,
   Dimensions,
 } from 'react-native';
+import ReactNativeModal from 'react-native-modal';
 
 function HomeScreen() {
   const [showSignInModal, setShowSignInModal] = useState(false);
@@ -364,79 +366,63 @@ function HomeScreen() {
         />
 
         {/* add new member Modal */}
-        <Modal
+        <ReactNativeModal
           animationType="slide"
           transparent={true}
+          onBackdropPress={() => {
+            setShowAddMemberModal(false);
+          }}
           visible={showAddMemnberModal}
           onRequestClose={() => {
             Alert.alert('Modal has been closed.');
             setShowSignInModal(!showAddMemnberModal);
           }}>
-          <TouchableOpacity
-            style={{
-              backgroundColor: 'red',
-              height: Dimensions.get('window').height,
-              width: Dimensions.get('window').width,
-            }}
-            onPress={() => {
-              setShowAddMemberModal(false);
-            }}>
-            <TouchableOpacity
-              style={[
-                styles.modalPositionAddMember,
-                {
-                  marginTop: marginOfModal(),
-                  backgroundColor: 'blue',
-                },
-              ]}>
-              <View>
-                <View style={styles.modalView}>
-                  {/* add new member */}
-                  <View style={styles.titleModal}>
-                    <Text style={styles.signIn}>Add a member</Text>
-                    <Text style={styles.toYourAccount}>to your team</Text>
-                  </View>
-                  {/* Text input for fullName and Title*/}
-                  <View style={styles.columnInput}>
-                    {/* fullName */}
-                    <InputField
-                      placeholder={'Enter your member name'}
-                      keyboardType={'default'}
-                      selectionColor={'#2D9CDB'}
-                      validateColor={validateFullName ? '#EB5757' : null}
-                      title={validateFullName ? 'Full name *' : 'Full name'}
-                      onChangeText={newText => {
-                        setValidateFullName(false);
-                        setFullName(newText);
-                      }}
-                      value={fullName}
-                      validateMessage={'Full name is required'}
-                      checkFullNameIsNull={validateFullName}
-                    />
-                    {/* title */}
-                    <InputField
-                      placeholder={'Enter your member title'}
-                      keyboardType={'default'}
-                      selectionColor={'#2D9CDB'}
-                      title={'Title'}
-                      onChangeText={newText => setTitle(newText)}
-                      value={title}
-                    />
-                  </View>
-                  {/* save button */}
-                  <View style={styles.buttonModal}>
-                    <TouchableOpacityComponent
-                      content={'Save'}
-                      onPress={() => {
-                        saveMember();
-                      }}
-                    />
-                  </View>
-                </View>
+          <View style={{marginHorizontal: 20}}>
+            <View style={styles.modalView}>
+              {/* add new member */}
+              <View style={styles.titleModal}>
+                <Text style={styles.signIn}>Add a member</Text>
+                <Text style={styles.toYourAccount}>to your team</Text>
               </View>
-            </TouchableOpacity>
-          </TouchableOpacity>
-        </Modal>
+              {/* Text input for fullName and Title*/}
+              <View style={styles.columnInput}>
+                {/* fullName */}
+                <InputField
+                  placeholder={'Enter your member name'}
+                  keyboardType={'default'}
+                  selectionColor={'#2D9CDB'}
+                  validateColor={validateFullName ? '#EB5757' : null}
+                  title={validateFullName ? 'Full name *' : 'Full name'}
+                  onChangeText={newText => {
+                    setValidateFullName(false);
+                    setFullName(newText);
+                  }}
+                  value={fullName}
+                  validateMessage={'Full name is required'}
+                  checkFullNameIsNull={validateFullName}
+                />
+                {/* title */}
+                <InputField
+                  placeholder={'Enter your member title'}
+                  keyboardType={'default'}
+                  selectionColor={'#2D9CDB'}
+                  title={'Title'}
+                  onChangeText={newText => setTitle(newText)}
+                  value={title}
+                />
+              </View>
+              {/* save button */}
+              <View style={styles.buttonModal}>
+                <TouchableOpacityComponent
+                  content={'Save'}
+                  onPress={() => {
+                    saveMember();
+                  }}
+                />
+              </View>
+            </View>
+          </View>
+        </ReactNativeModal>
 
         {/* floating button */}
         {sayHello === '' || visibilityAddMemberButton ? null : (
