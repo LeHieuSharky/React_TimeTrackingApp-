@@ -31,6 +31,16 @@ const styles = StyleSheet.create({
     lineHeight: 'normal',
     flexShrink: 0,
   },
+  validateMessage: {
+    marginTop: 3,
+    fontFamily: 'Inter-Regular',
+    fontSize: 12,
+    fontStyle: 'italic',
+    fontWeight: '400',
+    lineHeight: 'normal',
+    flexShrink: 0,
+    color: '#EB5757',
+  },
 });
 
 export default styles;

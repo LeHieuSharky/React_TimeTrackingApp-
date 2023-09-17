@@ -46,6 +46,7 @@ function HomeScreen() {
   const choosedTime = showTime.toString().substring(0, 10);
   const [showMember, setShowMember] = useState([]);
   const [compareToday, setCompareToday] = useState('today');
+  const [validateFullName, setValidateFullName] = useState(false);
   const [visibilityAddMemberButton, setVisibilityAddMemberButton] =
     useState(false);
   const todayTime = new Date();
@@ -67,8 +68,6 @@ function HomeScreen() {
     const formattedDate = `${year}-${month}-${day}`;
     return formattedDate;
   };
-
-  console.log(`data to show: ${JSON.stringify(showMember)}`);
 
   useEffect(() => {
     console.log(`compareToday ${compareToday}`);
@@ -166,35 +165,48 @@ function HomeScreen() {
 
   const signIn = async () => {
     try {
-      const response = await fetch(
-        'https://mt-qc.vietcap.com.vn/api/iam-external-service/v1/authentication/login',
-        {
-          method: 'POST',
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-            'grant-type': 'password',
-            'client-id': '8202ca6a-6d69-44c9-ad17-cb5596b92015',
-            'client-secret': 'FJ2jHe8exf8zyRm',
-          },
-          body: JSON.stringify({
-            username: '068C121214',
-            password: 'vcsc1234',
-            // username: userName,
-            // password: password,
-          }),
-        },
-      );
-      const json = await response.json();
-      const decodeData = jwt_decode(json.data.token);
+      // const response = await fetch(
+      //   'https://mt-qc.vietcap.com.vn/api/iam-external-service/v1/authentication/login',
+      //   {
+      //     method: 'POST',
+      //     headers: {
+      //       Accept: 'application/json',
+      //       'Content-Type': 'application/json',
+      //       'grant-type': 'password',
+      //       'client-id': '8202ca6a-6d69-44c9-ad17-cb5596b92015',
+      //       'client-secret': 'FJ2jHe8exf8zyRm',
+      //     },
+      //     body: JSON.stringify({
+      //       username: '068C121214',
+      //       password: 'vcsc1234',
+      //       // username: userName,
+      //       // password: password,
+      //     }),
+      //   },
+      // );
+      // const json = await response.json();
+      // const decodeData = jwt_decode(json.data.token);
+      // const data = {
+      //   id: decodeData.accountNo,
+      //   members: [],
+      // };
+
+      // dispatch(addLeader(data));
+      // setIdUser(decodeData.accountNo);
+      // setSayHello(`Hello, ${decodeData.customerName}`);
+
+      ///
       const data = {
-        id: decodeData.accountNo,
+        id: '123456',
         members: [],
       };
 
       dispatch(addLeader(data));
-      setIdUser(decodeData.accountNo);
-      setSayHello(`Hello, ${decodeData.customerName}`);
+      setIdUser('123456');
+      setSayHello(`Hello le hieu`);
+
+      ///
+
       setShowSignInModal(!showSignInModal);
       return json;
     } catch (error) {
@@ -280,27 +292,39 @@ function HomeScreen() {
     setShowAddMemberModal(false);
   };
 
+  const saveMember = () => {
+    if (fullName === '') {
+      console.log('checkkkkk');
+      setValidateFullName(true);
+    } else {
+      setValidateFullName(false);
+      addMemberToList();
+    }
+  };
+
   return (
     <SafeAreaView>
       <StatusBar />
 
       <View style={styles.parrentColumn}>
-        {/* row  include: date, month, year and timePickerButton*/}
-        <View style={styles.rowDateTime}>
-          <Text
-            style={styles.timeDateMonth}>{`${showTime.getDate()} ${formatMonth(
-            showTime.getMonth(),
-          )}`}</Text>
-          <Text style={styles.timeYear}>{showTime.getFullYear()}</Text>
-          <TouchableOpacity onPress={() => setDateTimePicker(true)}>
+        <TouchableOpacity onPress={() => setDateTimePicker(true)}>
+          {/* row  include: date, month, year and timePickerButton*/}
+          <View style={styles.rowDateTime}>
+            <Text
+              style={
+                styles.timeDateMonth
+              }>{`${showTime.getDate()} ${formatMonth(
+              showTime.getMonth(),
+            )}`}</Text>
+            <Text style={styles.timeYear}>{showTime.getFullYear()}</Text>
             <Image
               source={require('/Users/administrator/Documents/react_native/TimeTrackingApp/src/assets/images/dropDown.png')}
             />
-          </TouchableOpacity>
-        </View>
+          </View>
 
-        {/* weekday*/}
-        <Text style={styles.weeksDay}>{formatDay(showTime.getDay())}</Text>
+          {/* weekday*/}
+          <Text style={styles.weeksDay}>{formatDay(showTime.getDay())}</Text>
+        </TouchableOpacity>
 
         {/* say Hello useName */}
         <Text style={styles.sayHello}>{sayHello}</Text>
@@ -350,57 +374,67 @@ function HomeScreen() {
           }}>
           <TouchableOpacity
             style={{
+              backgroundColor: 'red',
               height: Dimensions.get('window').height,
               width: Dimensions.get('window').width,
             }}
             onPress={() => {
               setShowAddMemberModal(false);
             }}>
-            <View
+            <TouchableOpacity
               style={[
-                styles.modalPosition,
+                styles.modalPositionAddMember,
                 {
                   marginTop: marginOfModal(),
+                  backgroundColor: 'blue',
                 },
               ]}>
-              <View style={styles.modalView}>
-                {/* Sign in to your account */}
-                <View style={styles.titleModal}>
-                  <Text style={styles.signIn}>Add a member</Text>
-                  <Text style={styles.toYourAccount}>to your team</Text>
-                </View>
-                {/* Text input for userName password */}
-                <View style={styles.columnInput}>
-                  {/* useName */}
-                  <InputField
-                    placeholder={'Enter your member name'}
-                    keyboardType={'default'}
-                    selectionColor={'#2D9CDB'}
-                    title={'Full name'}
-                    onChangeText={newText => setFullName(newText)}
-                    value={fullName}
-                  />
-                  {/* password */}
-                  <InputField
-                    placeholder={'Enter your member title'}
-                    keyboardType={'default'}
-                    selectionColor={'#2D9CDB'}
-                    title={'Title'}
-                    onChangeText={newText => setTitle(newText)}
-                    value={title}
-                  />
-                </View>
-                {/* Sign in button */}
-                <View style={styles.buttonModal}>
-                  <TouchableOpacityComponent
-                    content={'Save'}
-                    onPress={() => {
-                      addMemberToList();
-                    }}
-                  />
+              <View>
+                <View style={styles.modalView}>
+                  {/* add new member */}
+                  <View style={styles.titleModal}>
+                    <Text style={styles.signIn}>Add a member</Text>
+                    <Text style={styles.toYourAccount}>to your team</Text>
+                  </View>
+                  {/* Text input for fullName and Title*/}
+                  <View style={styles.columnInput}>
+                    {/* fullName */}
+                    <InputField
+                      placeholder={'Enter your member name'}
+                      keyboardType={'default'}
+                      selectionColor={'#2D9CDB'}
+                      validateColor={validateFullName ? '#EB5757' : null}
+                      title={validateFullName ? 'Full name *' : 'Full name'}
+                      onChangeText={newText => {
+                        setValidateFullName(false);
+                        setFullName(newText);
+                      }}
+                      value={fullName}
+                      validateMessage={'Full name is required'}
+                      checkFullNameIsNull={validateFullName}
+                    />
+                    {/* title */}
+                    <InputField
+                      placeholder={'Enter your member title'}
+                      keyboardType={'default'}
+                      selectionColor={'#2D9CDB'}
+                      title={'Title'}
+                      onChangeText={newText => setTitle(newText)}
+                      value={title}
+                    />
+                  </View>
+                  {/* save button */}
+                  <View style={styles.buttonModal}>
+                    <TouchableOpacityComponent
+                      content={'Save'}
+                      onPress={() => {
+                        saveMember();
+                      }}
+                    />
+                  </View>
                 </View>
               </View>
-            </View>
+            </TouchableOpacity>
           </TouchableOpacity>
         </Modal>
 
