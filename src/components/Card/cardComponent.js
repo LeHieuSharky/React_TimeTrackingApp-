@@ -81,7 +81,7 @@ export default function CardComponent(props) {
             style={[
               styles.circle,
               {
-                backgroundColor: color,
+                backgroundColor: checkFuture === 'future' ? '#D9D9D9' : color,
               },
             ]}
           />
@@ -92,6 +92,7 @@ export default function CardComponent(props) {
         </View>
         <View style={styles.timePickerRow}>
           <TextInput
+            editable={checkFuture === 'pastday' ? false : true}
             ref={hourInputRef}
             style={styles.timeInput}
             onChangeText={value => {

@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import styles from './styles';
 import 'react-native-get-random-values';
 import {v4 as uuidv4} from 'uuid';
@@ -13,18 +13,21 @@ import {addMember} from '../../redux/HomeScreen/Members/memberSlice';
 import {addLeader} from '../../redux/HomeScreen/Auth/authSlice';
 import {addNewDateTime} from '../../redux/HomeScreen/DateTime/dateTimeSlice';
 import {updateMemberOfLeader} from '../../redux/HomeScreen/Auth/authSlice';
-
+import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import {
   SafeAreaView,
   StatusBar,
   Text,
   TouchableOpacity,
+  Platform,
   View,
   Modal,
+  ScrollView,
   FlatList,
   Alert,
   Image,
   Dimensions,
+  KeyboardAvoidingView,
 } from 'react-native';
 import ReactNativeModal from 'react-native-modal';
 
@@ -54,6 +57,7 @@ function HomeScreen() {
     useState(false);
   const [randomeState, setRandomState] = useState(false);
   const todayTime = new Date();
+  const flatListRef = useRef(null);
   const moment = require('moment');
 
   useEffect(preState => {
@@ -182,10 +186,8 @@ function HomeScreen() {
             'client-secret': 'FJ2jHe8exf8zyRm',
           },
           body: JSON.stringify({
-            username: '068C121214',
-            password: 'vcsc1234',
-            // username: userName,
-            // password: password,
+            username: userName,
+            password: password,
           }),
         },
       );
@@ -294,9 +296,8 @@ function HomeScreen() {
       addMemberToList();
     }
   };
-
   return (
-    <SafeAreaView>
+    <SafeAreaView style={{flex: 1}}>
       <StatusBar />
 
       <View style={styles.parrentColumn}>
@@ -327,22 +328,24 @@ function HomeScreen() {
 
         {/* List of member card */}
         {sayHello === '' ? null : (
-          <FlatList
-            style={styles.listCard}
-            data={compareToday === 'pastday' ? showMember[0] : showMember}
-            renderItem={({item}) => (
-              <CardComponent
-                fullName={item.fullName}
-                title={item.title}
-                id={item.memberId}
-                hour={item.hour}
-                minute={item.minute}
-                color={'#D9D9D9'}
-                checkFuture={compareToday}
-              />
-            )}
-            keyExtractor={item => item.id}
-          />
+          <KeyboardAwareScrollView>
+            <FlatList
+              style={[styles.listCard]}
+              data={compareToday === 'pastday' ? showMember[0] : showMember}
+              renderItem={({item}) => (
+                <CardComponent
+                  fullName={item.fullName}
+                  title={item.title}
+                  id={item.memberId}
+                  hour={item.hour}
+                  minute={item.minute}
+                  color={'#D9D9D9'}
+                  checkFuture={compareToday}
+                />
+              )}
+              keyExtractor={item => item.id}
+            />
+          </KeyboardAwareScrollView>
         )}
 
         {/* Date time picker */}
@@ -362,9 +365,11 @@ function HomeScreen() {
         />
 
         {/* add new member Modal */}
+
         <ReactNativeModal
           animationType="slide"
           transparent={true}
+          style={{marginHorizontal: 40}}
           onBackdropPress={() => {
             setShowAddMemberModal(false);
           }}
@@ -373,7 +378,13 @@ function HomeScreen() {
             Alert.alert('Modal has been closed.');
             setShowSignInModal(!showAddMemnberModal);
           }}>
-          <View style={{marginHorizontal: 20}}>
+          <View
+            style={
+              (styles.modalPositionAddMember,
+              {
+                marginBottom: keyboardHeight === 0 ? 0 : 200,
+              })
+            }>
             <View style={styles.modalView}>
               {/* add new member */}
               <View style={styles.titleModal}>
@@ -412,6 +423,8 @@ function HomeScreen() {
                 <TouchableOpacityComponent
                   content={'Save'}
                   onPress={() => {
+                    setFullName('');
+                    setPassword('');
                     saveMember();
                   }}
                 />
@@ -431,9 +444,10 @@ function HomeScreen() {
           </TouchableOpacity>
         )}
       </View>
+
       {/* Sign in Modal */}
       <View style={{backgroundColor: '#BDBDBD', height: '100%'}}>
-        <Modal
+        <ReactNativeModal
           animationType="slide"
           transparent={true}
           visible={showSignInModal}
@@ -486,7 +500,7 @@ function HomeScreen() {
               </View>
             </View>
           </View>
-        </Modal>
+        </ReactNativeModal>
       </View>
     </SafeAreaView>
   );
