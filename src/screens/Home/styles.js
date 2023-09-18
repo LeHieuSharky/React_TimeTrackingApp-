@@ -35,6 +35,7 @@ const styles = StyleSheet.create({
     fontWeight: '400',
   },
   parrentColumn: {
+    height: '100%',
     paddingHorizontal: 16,
     paddingTop: 40,
   },
@@ -45,7 +46,6 @@ const styles = StyleSheet.create({
   },
   listCard: {
     paddingTop: 22,
-    height: 600,
   },
   titleModal: {
     justifyContent: 'flex-start',
@@ -108,7 +108,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     right: 20,
-    bottom: 0,
+    bottom: 10,
+    marginTop: 100,
   },
 });
 
