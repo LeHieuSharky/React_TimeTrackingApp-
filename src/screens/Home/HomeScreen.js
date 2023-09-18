@@ -43,6 +43,7 @@ function HomeScreen() {
   const keyboardHeight = useKeyboard();
   const dispatch = useDispatch();
   const members = useSelector(state => state.members);
+  console.log(`members: ${JSON.stringify(members)}`);
   const leaders = useSelector(state => state.leaders);
   const listDateTime = useSelector(state => state.listDateTime);
   const choosedTime = showTime.toString().substring(0, 10);
@@ -51,6 +52,7 @@ function HomeScreen() {
   const [validateFullName, setValidateFullName] = useState(false);
   const [visibilityAddMemberButton, setVisibilityAddMemberButton] =
     useState(false);
+  const [randomeState, setRandomState] = useState(false);
   const todayTime = new Date();
   const moment = require('moment');
 
@@ -61,12 +63,10 @@ function HomeScreen() {
   const convertDate = date => {
     const originalDate = new Date(date);
 
-    // Extract year, month, and day components
     const year = originalDate.getFullYear();
-    const month = String(originalDate.getMonth() + 1).padStart(2, '0'); // Add 1 to month since it's 0-based
+    const month = String(originalDate.getMonth() + 1).padStart(2, '0');
     const day = String(originalDate.getDate()).padStart(2, '0');
 
-    // Format the components into "YYYY-MM-DD" format
     const formattedDate = `${year}-${month}-${day}`;
     return formattedDate;
   };
@@ -74,6 +74,7 @@ function HomeScreen() {
   useEffect(() => {
     console.log(`compareToday ${compareToday}`);
     if (compareToday === 'future') {
+      setRandomState(!randomeState);
       console.log('tomorrowwwwww');
       let showListMember = [];
 
@@ -88,12 +89,11 @@ function HomeScreen() {
               const newMember = {...member};
               newMember.hour = '--';
               newMember.minute = '--';
-
               showListMember.push(newMember);
             }
           });
         });
-
+        console.log(`future: ${JSON.stringify(showListMember)}`);
         setShowMember(showListMember);
       }
     } else if (compareToday === 'pastday') {
@@ -117,6 +117,7 @@ function HomeScreen() {
       console.log(`pastday data: ${showListMember}`);
       setShowMember([showListMember]);
     } else {
+      console.log('todayyyyyyy');
       let showListMember = [];
       const leader = leaders.find(item => item.id === idUser);
       if (leader !== undefined) {
@@ -132,6 +133,8 @@ function HomeScreen() {
       }
     }
   }, [compareToday]);
+
+  console.log(`show data: ${JSON.stringify(showMember)}`);
 
   useEffect(() => {
     console.log('todayyyyyyyyyy');
@@ -167,47 +170,35 @@ function HomeScreen() {
 
   const signIn = async () => {
     try {
-      // const response = await fetch(
-      //   'https://mt-qc.vietcap.com.vn/api/iam-external-service/v1/authentication/login',
-      //   {
-      //     method: 'POST',
-      //     headers: {
-      //       Accept: 'application/json',
-      //       'Content-Type': 'application/json',
-      //       'grant-type': 'password',
-      //       'client-id': '8202ca6a-6d69-44c9-ad17-cb5596b92015',
-      //       'client-secret': 'FJ2jHe8exf8zyRm',
-      //     },
-      //     body: JSON.stringify({
-      //       username: '068C121214',
-      //       password: 'vcsc1234',
-      //       // username: userName,
-      //       // password: password,
-      //     }),
-      //   },
-      // );
-      // const json = await response.json();
-      // const decodeData = jwt_decode(json.data.token);
-      // const data = {
-      //   id: decodeData.accountNo,
-      //   members: [],
-      // };
-
-      // dispatch(addLeader(data));
-      // setIdUser(decodeData.accountNo);
-      // setSayHello(`Hello, ${decodeData.customerName}`);
-
-      ///
+      const response = await fetch(
+        'https://mt-qc.vietcap.com.vn/api/iam-external-service/v1/authentication/login',
+        {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            'grant-type': 'password',
+            'client-id': '8202ca6a-6d69-44c9-ad17-cb5596b92015',
+            'client-secret': 'FJ2jHe8exf8zyRm',
+          },
+          body: JSON.stringify({
+            username: '068C121214',
+            password: 'vcsc1234',
+            // username: userName,
+            // password: password,
+          }),
+        },
+      );
+      const json = await response.json();
+      const decodeData = jwt_decode(json.data.token);
       const data = {
-        id: '123456',
+        id: decodeData.accountNo,
         members: [],
       };
 
       dispatch(addLeader(data));
-      setIdUser('123456');
-      setSayHello(`Hello le hieu`);
-
-      ///
+      setIdUser(decodeData.accountNo);
+      setSayHello(`Hello, ${decodeData.customerName}`);
 
       setShowSignInModal(!showSignInModal);
       return json;
@@ -309,7 +300,10 @@ function HomeScreen() {
       <StatusBar />
 
       <View style={styles.parrentColumn}>
-        <TouchableOpacity onPress={() => setDateTimePicker(true)}>
+        <TouchableOpacity
+          onPress={() => {
+            setDateTimePicker(true);
+          }}>
           {/* row  include: date, month, year and timePickerButton*/}
           <View style={styles.rowDateTime}>
             <Text
@@ -344,6 +338,7 @@ function HomeScreen() {
                 hour={item.hour}
                 minute={item.minute}
                 color={'#D9D9D9'}
+                checkFuture={compareToday}
               />
             )}
             keyExtractor={item => item.id}
@@ -358,6 +353,7 @@ function HomeScreen() {
           mode="date"
           onConfirm={date => {
             setShowTime(date);
+
             setDateTimePicker(false);
           }}
           onCancel={() => {
