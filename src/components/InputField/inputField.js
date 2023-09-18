@@ -15,7 +15,18 @@ function InputField(params) {
 
   return (
     <View style={styles.column}>
-      <Text style={[styles.title, {color: focusColor()}]}>{params.title}</Text>
+      <Text
+        style={[
+          styles.title,
+          {
+            color:
+              params.validateColor === null
+                ? focusColor()
+                : params.validateColor,
+          },
+        ]}>
+        {params.title}
+      </Text>
       <TextInput
         style={[styles.field, {borderBottomColor: focusColor()}]}
         onChangeText={params.onChangeText}
@@ -30,6 +41,9 @@ function InputField(params) {
           handleOnBlur();
         }}
       />
+      {!params.checkFullNameIsNull ? null : (
+        <Text style={[styles.validateMessage]}>{params.validateMessage}</Text>
+      )}
     </View>
   );
 }

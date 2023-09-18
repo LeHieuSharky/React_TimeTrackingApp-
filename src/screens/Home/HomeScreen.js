@@ -13,18 +13,20 @@ import {addMember} from '../../redux/HomeScreen/Members/memberSlice';
 import {addLeader} from '../../redux/HomeScreen/Auth/authSlice';
 import {addNewDateTime} from '../../redux/HomeScreen/DateTime/dateTimeSlice';
 import {updateMemberOfLeader} from '../../redux/HomeScreen/Auth/authSlice';
+
 import {
   SafeAreaView,
   StatusBar,
   Text,
   TouchableOpacity,
   View,
-  FlatList,
   Modal,
+  FlatList,
   Alert,
   Image,
   Dimensions,
 } from 'react-native';
+import ReactNativeModal from 'react-native-modal';
 
 function HomeScreen() {
   const [showSignInModal, setShowSignInModal] = useState(false);
@@ -41,13 +43,16 @@ function HomeScreen() {
   const keyboardHeight = useKeyboard();
   const dispatch = useDispatch();
   const members = useSelector(state => state.members);
+  console.log(`members: ${JSON.stringify(members)}`);
   const leaders = useSelector(state => state.leaders);
   const listDateTime = useSelector(state => state.listDateTime);
   const choosedTime = showTime.toString().substring(0, 10);
   const [showMember, setShowMember] = useState([]);
   const [compareToday, setCompareToday] = useState('today');
+  const [validateFullName, setValidateFullName] = useState(false);
   const [visibilityAddMemberButton, setVisibilityAddMemberButton] =
     useState(false);
+  const [randomeState, setRandomState] = useState(false);
   const todayTime = new Date();
   const moment = require('moment');
 
@@ -58,21 +63,18 @@ function HomeScreen() {
   const convertDate = date => {
     const originalDate = new Date(date);
 
-    // Extract year, month, and day components
     const year = originalDate.getFullYear();
-    const month = String(originalDate.getMonth() + 1).padStart(2, '0'); // Add 1 to month since it's 0-based
+    const month = String(originalDate.getMonth() + 1).padStart(2, '0');
     const day = String(originalDate.getDate()).padStart(2, '0');
 
-    // Format the components into "YYYY-MM-DD" format
     const formattedDate = `${year}-${month}-${day}`;
     return formattedDate;
   };
 
-  console.log(`data to show: ${JSON.stringify(showMember)}`);
-
   useEffect(() => {
     console.log(`compareToday ${compareToday}`);
     if (compareToday === 'future') {
+      setRandomState(!randomeState);
       console.log('tomorrowwwwww');
       let showListMember = [];
 
@@ -87,12 +89,11 @@ function HomeScreen() {
               const newMember = {...member};
               newMember.hour = '--';
               newMember.minute = '--';
-
               showListMember.push(newMember);
             }
           });
         });
-
+        console.log(`future: ${JSON.stringify(showListMember)}`);
         setShowMember(showListMember);
       }
     } else if (compareToday === 'pastday') {
@@ -116,6 +117,7 @@ function HomeScreen() {
       console.log(`pastday data: ${showListMember}`);
       setShowMember([showListMember]);
     } else {
+      console.log('todayyyyyyy');
       let showListMember = [];
       const leader = leaders.find(item => item.id === idUser);
       if (leader !== undefined) {
@@ -131,6 +133,8 @@ function HomeScreen() {
       }
     }
   }, [compareToday]);
+
+  console.log(`show data: ${JSON.stringify(showMember)}`);
 
   useEffect(() => {
     console.log('todayyyyyyyyyy');
@@ -195,6 +199,7 @@ function HomeScreen() {
       dispatch(addLeader(data));
       setIdUser(decodeData.accountNo);
       setSayHello(`Hello, ${decodeData.customerName}`);
+
       setShowSignInModal(!showSignInModal);
       return json;
     } catch (error) {
@@ -280,27 +285,42 @@ function HomeScreen() {
     setShowAddMemberModal(false);
   };
 
+  const saveMember = () => {
+    if (fullName === '') {
+      console.log('checkkkkk');
+      setValidateFullName(true);
+    } else {
+      setValidateFullName(false);
+      addMemberToList();
+    }
+  };
+
   return (
     <SafeAreaView>
       <StatusBar />
 
       <View style={styles.parrentColumn}>
-        {/* row  include: date, month, year and timePickerButton*/}
-        <View style={styles.rowDateTime}>
-          <Text
-            style={styles.timeDateMonth}>{`${showTime.getDate()} ${formatMonth(
-            showTime.getMonth(),
-          )}`}</Text>
-          <Text style={styles.timeYear}>{showTime.getFullYear()}</Text>
-          <TouchableOpacity onPress={() => setDateTimePicker(true)}>
+        <TouchableOpacity
+          onPress={() => {
+            setDateTimePicker(true);
+          }}>
+          {/* row  include: date, month, year and timePickerButton*/}
+          <View style={styles.rowDateTime}>
+            <Text
+              style={
+                styles.timeDateMonth
+              }>{`${showTime.getDate()} ${formatMonth(
+              showTime.getMonth(),
+            )}`}</Text>
+            <Text style={styles.timeYear}>{showTime.getFullYear()}</Text>
             <Image
               source={require('/Users/administrator/Documents/react_native/TimeTrackingApp/src/assets/images/dropDown.png')}
             />
-          </TouchableOpacity>
-        </View>
+          </View>
 
-        {/* weekday*/}
-        <Text style={styles.weeksDay}>{formatDay(showTime.getDay())}</Text>
+          {/* weekday*/}
+          <Text style={styles.weeksDay}>{formatDay(showTime.getDay())}</Text>
+        </TouchableOpacity>
 
         {/* say Hello useName */}
         <Text style={styles.sayHello}>{sayHello}</Text>
@@ -318,6 +338,7 @@ function HomeScreen() {
                 hour={item.hour}
                 minute={item.minute}
                 color={'#D9D9D9'}
+                checkFuture={compareToday}
               />
             )}
             keyExtractor={item => item.id}
@@ -332,6 +353,7 @@ function HomeScreen() {
           mode="date"
           onConfirm={date => {
             setShowTime(date);
+
             setDateTimePicker(false);
           }}
           onCancel={() => {
@@ -340,69 +362,63 @@ function HomeScreen() {
         />
 
         {/* add new member Modal */}
-        <Modal
+        <ReactNativeModal
           animationType="slide"
           transparent={true}
+          onBackdropPress={() => {
+            setShowAddMemberModal(false);
+          }}
           visible={showAddMemnberModal}
           onRequestClose={() => {
             Alert.alert('Modal has been closed.');
             setShowSignInModal(!showAddMemnberModal);
           }}>
-          <TouchableOpacity
-            style={{
-              height: Dimensions.get('window').height,
-              width: Dimensions.get('window').width,
-            }}
-            onPress={() => {
-              setShowAddMemberModal(false);
-            }}>
-            <View
-              style={[
-                styles.modalPosition,
-                {
-                  marginTop: marginOfModal(),
-                },
-              ]}>
-              <View style={styles.modalView}>
-                {/* Sign in to your account */}
-                <View style={styles.titleModal}>
-                  <Text style={styles.signIn}>Add a member</Text>
-                  <Text style={styles.toYourAccount}>to your team</Text>
-                </View>
-                {/* Text input for userName password */}
-                <View style={styles.columnInput}>
-                  {/* useName */}
-                  <InputField
-                    placeholder={'Enter your member name'}
-                    keyboardType={'default'}
-                    selectionColor={'#2D9CDB'}
-                    title={'Full name'}
-                    onChangeText={newText => setFullName(newText)}
-                    value={fullName}
-                  />
-                  {/* password */}
-                  <InputField
-                    placeholder={'Enter your member title'}
-                    keyboardType={'default'}
-                    selectionColor={'#2D9CDB'}
-                    title={'Title'}
-                    onChangeText={newText => setTitle(newText)}
-                    value={title}
-                  />
-                </View>
-                {/* Sign in button */}
-                <View style={styles.buttonModal}>
-                  <TouchableOpacityComponent
-                    content={'Save'}
-                    onPress={() => {
-                      addMemberToList();
-                    }}
-                  />
-                </View>
+          <View style={{marginHorizontal: 20}}>
+            <View style={styles.modalView}>
+              {/* add new member */}
+              <View style={styles.titleModal}>
+                <Text style={styles.signIn}>Add a member</Text>
+                <Text style={styles.toYourAccount}>to your team</Text>
+              </View>
+              {/* Text input for fullName and Title*/}
+              <View style={styles.columnInput}>
+                {/* fullName */}
+                <InputField
+                  placeholder={'Enter your member name'}
+                  keyboardType={'default'}
+                  selectionColor={'#2D9CDB'}
+                  validateColor={validateFullName ? '#EB5757' : null}
+                  title={validateFullName ? 'Full name *' : 'Full name'}
+                  onChangeText={newText => {
+                    setValidateFullName(false);
+                    setFullName(newText);
+                  }}
+                  value={fullName}
+                  validateMessage={'Full name is required'}
+                  checkFullNameIsNull={validateFullName}
+                />
+                {/* title */}
+                <InputField
+                  placeholder={'Enter your member title'}
+                  keyboardType={'default'}
+                  selectionColor={'#2D9CDB'}
+                  title={'Title'}
+                  onChangeText={newText => setTitle(newText)}
+                  value={title}
+                />
+              </View>
+              {/* save button */}
+              <View style={styles.buttonModal}>
+                <TouchableOpacityComponent
+                  content={'Save'}
+                  onPress={() => {
+                    saveMember();
+                  }}
+                />
               </View>
             </View>
-          </TouchableOpacity>
-        </Modal>
+          </View>
+        </ReactNativeModal>
 
         {/* floating button */}
         {sayHello === '' || visibilityAddMemberButton ? null : (

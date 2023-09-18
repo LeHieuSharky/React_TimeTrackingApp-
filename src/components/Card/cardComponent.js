@@ -1,6 +1,12 @@
 import styles from './styles';
-import React, {useEffect, useState} from 'react';
-import {Text, TextInput, View} from 'react-native';
+import React, {useEffect, useState, useRef} from 'react';
+import {
+  Text,
+  TextInput,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
+} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {
   updateHourOfMember,
@@ -10,6 +16,9 @@ import {
 export default function CardComponent(props) {
   const [hourInput, setHourInput] = useState('--');
   const [minuteInput, setMinuteInput] = useState('--');
+  const [checkFuture, setCheckFuture] = useState('');
+  const minuteInputRef = useRef(null);
+  const hourInputRef = useRef(null);
   const dispatch = useDispatch();
   const [color, setColor] = useState('#D9D9D9');
 
@@ -22,7 +31,8 @@ export default function CardComponent(props) {
     setHourInput(props.hour);
     setMinuteInput(props.minute);
     setColor(props.color);
-  }, [props.hour, props.minute, props.color]);
+    setCheckFuture(props.checkFuture);
+  }, [props.hour, props.minute, props.color, props.checkFuture]);
 
   useEffect(() => {
     const newColor = compareColor();
@@ -55,7 +65,7 @@ export default function CardComponent(props) {
     } else if (dateA < dateB(listTime[1])) {
       return '#6FCF97';
     } else if (dateA < dateB(listTime[2])) {
-      return '##F2C94C';
+      return '#F2C94C';
     } else if (dateA >= dateB(listTime[2])) {
       return '#EB5757';
     } else {
@@ -82,8 +92,12 @@ export default function CardComponent(props) {
         </View>
         <View style={styles.timePickerRow}>
           <TextInput
+            ref={hourInputRef}
             style={styles.timeInput}
             onChangeText={value => {
+              if (value.length === 2) {
+                minuteInputRef.current.focus();
+              }
               dispatch(
                 updateHourOfMember({
                   id: props.id,
@@ -92,7 +106,7 @@ export default function CardComponent(props) {
               );
               setHourInput(value);
             }}
-            value={hourInput}
+            value={checkFuture === 'future' ? '--' : hourInput}
             maxLength={2}
             keyboardType="numeric"
             onFocus={() => {
@@ -108,6 +122,7 @@ export default function CardComponent(props) {
           />
           <Text style={styles.timeInput}>:</Text>
           <TextInput
+            ref={minuteInputRef}
             style={styles.timeInput}
             onChangeText={value => {
               dispatch(
@@ -118,7 +133,7 @@ export default function CardComponent(props) {
               );
               setMinuteInput(value);
             }}
-            value={minuteInput}
+            value={checkFuture === 'future' ? '--' : minuteInput}
             keyboardType="numeric"
             maxLength={2}
             onFocus={() => {

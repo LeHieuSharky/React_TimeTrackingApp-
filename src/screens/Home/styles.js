@@ -76,8 +76,10 @@ const styles = StyleSheet.create({
   },
   modalPosition: {
     flex: 1,
-    // justifyContent: 'center',
-    // marginTop: Dimensions.get('window').height / 3.5,
+    alignItems: 'center',
+  },
+  modalPositionAddMember: {
+    flex: 1,
     alignItems: 'center',
   },
   modalView: {
