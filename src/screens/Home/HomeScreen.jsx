@@ -60,7 +60,6 @@ function HomeScreen() {
   const flatListRef = useRef(null);
   const moment = require('moment');
 
-  // 
   useEffect(preState => {
     setShowSignInModal(!preState);
   }, []);
@@ -156,7 +155,6 @@ function HomeScreen() {
       });
       setShowMember(showListMember);
     }
-    /// TODO depend on leader id
   }, [showSignInModal]);
 
   useEffect(() => {
