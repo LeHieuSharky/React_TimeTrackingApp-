@@ -186,8 +186,6 @@ function HomeScreen() {
             'client-secret': 'FJ2jHe8exf8zyRm',
           },
           body: JSON.stringify({
-            // username: '068C121214',
-            // password: 'vcsc1234',
             username: userName,
             password: password,
           }),
@@ -449,7 +447,7 @@ function HomeScreen() {
 
       {/* Sign in Modal */}
       <View style={{backgroundColor: '#BDBDBD', height: '100%'}}>
-        <Modal
+        <ReactNativeModal
           animationType="slide"
           transparent={true}
           visible={showSignInModal}
@@ -502,7 +500,7 @@ function HomeScreen() {
               </View>
             </View>
           </View>
-        </Modal>
+        </ReactNativeModal>
       </View>
     </SafeAreaView>
   );
