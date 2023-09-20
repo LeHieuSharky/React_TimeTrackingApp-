@@ -14,20 +14,17 @@ import {addLeader} from '../../redux/HomeScreen/Auth/authSlice';
 import {addNewDateTime} from '../../redux/HomeScreen/DateTime/dateTimeSlice';
 import {updateMemberOfLeader} from '../../redux/HomeScreen/Auth/authSlice';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
+import database from '@react-native-firebase/database';
 import {
   SafeAreaView,
   StatusBar,
   Text,
   TouchableOpacity,
-  Platform,
   View,
-  Modal,
-  ScrollView,
   FlatList,
   Alert,
   Image,
   Dimensions,
-  KeyboardAvoidingView,
 } from 'react-native';
 import ReactNativeModal from 'react-native-modal';
 
@@ -37,7 +34,6 @@ function HomeScreen() {
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [title, setTitle] = useState('');
-  const [leaderId, setLeaderId] = useState('');
   const [sayHello, setSayHello] = useState('');
   const [showTime, setShowTime] = useState(new Date());
   const [showDateTimePicker, setDateTimePicker] = useState(false);
@@ -46,7 +42,6 @@ function HomeScreen() {
   const keyboardHeight = useKeyboard();
   const dispatch = useDispatch();
   const members = useSelector(state => state.members);
-  console.log(`members: ${JSON.stringify(members)}`);
   const leaders = useSelector(state => state.leaders);
   const listDateTime = useSelector(state => state.listDateTime);
   const choosedTime = showTime.toString().substring(0, 10);
@@ -57,8 +52,32 @@ function HomeScreen() {
     useState(false);
   const [randomeState, setRandomState] = useState(false);
   const todayTime = new Date();
-  const flatListRef = useRef(null);
   const moment = require('moment');
+
+  useEffect(() => {
+    const membersListener = database()
+      .ref('/members/')
+      .on('value', snapshot => {
+        console.log(`Members firebase: ${JSON.stringify(snapshot.val())}`);
+      });
+
+    const leadersListener = database()
+      .ref('/leaders/')
+      .on('value', snapshot => {
+        console.log(`leaders firebase: ${JSON.stringify(snapshot.val())}`);
+      });
+
+    const dateTimesListener = database()
+      .ref('/dateTimes/')
+      .on('value', snapshot => {
+        console.log(`dateTimes firebase: ${JSON.stringify(snapshot.val())}`);
+      });
+    return () => {
+      database().ref('/members/').off('value', membersListener);
+      database().ref('/leaders/').off('value', leadersListener);
+      database().ref('/dateTimes/').off('value', dateTimesListener);
+    };
+  }, [showMember]);
 
   useEffect(preState => {
     setShowSignInModal(!preState);
@@ -75,87 +94,78 @@ function HomeScreen() {
     return formattedDate;
   };
 
-  useEffect(() => {
-    console.log(`compareToday ${compareToday}`);
-    if (compareToday === 'future') {
-      setRandomState(!randomeState);
-      console.log('tomorrowwwwww');
-      let showListMember = [];
+  // useEffect(() => {
+  //   if (compareToday === 'future') {
+  //     setRandomState(!randomeState);
+  //     let showListMember = [];
 
-      const leader = leaders.find(item => item.id === idUser);
+  //     const leader = leaders.find(item => item.id === idUser);
 
-      if (leader !== undefined) {
-        let memberArray = [...leader.members];
+  //     if (leader !== undefined) {
+  //       let memberArray = [...leader.members];
 
-        memberArray.forEach(memberID => {
-          members.forEach(member => {
-            if (member.memberId === memberID && member.leaderId === idUser) {
-              const newMember = {...member};
-              newMember.hour = '--';
-              newMember.minute = '--';
-              showListMember.push(newMember);
-            }
-          });
-        });
-        console.log(`future: ${JSON.stringify(showListMember)}`);
-        setShowMember(showListMember);
-      }
-    } else if (compareToday === 'pastday') {
-      console.log('yesterday');
-      setShowMember([]);
-      const choosedTimeData = listDateTime.filter(
-        time => time.time === choosedTime,
-      );
-      let memberArray = [];
-      if (choosedTimeData.length > 0) {
-        memberArray = choosedTimeData[0].members;
-      }
-      let showListMember = [];
-      memberArray.forEach(memberID => {
-        members.forEach(member => {
-          if (member.memberId === memberID && member.leaderId === idUser) {
-            showListMember.push(member);
-          }
-        });
-      });
-      console.log(`pastday data: ${showListMember}`);
-      setShowMember([showListMember]);
-    } else {
-      console.log('todayyyyyyy');
-      let showListMember = [];
-      const leader = leaders.find(item => item.id === idUser);
-      if (leader !== undefined) {
-        let memberArray = [...leader.members];
-        memberArray.forEach(memberID => {
-          members.forEach(member => {
-            if (member.memberId === memberID && member.leaderId === idUser) {
-              showListMember.push(member);
-            }
-          });
-        });
-        setShowMember(showListMember);
-      }
-    }
-  }, [compareToday]);
+  //       memberArray.forEach(memberID => {
+  //         members.forEach(member => {
+  //           if (member.memberId === memberID && member.leaderId === idUser) {
+  //             const newMember = {...member};
+  //             newMember.hour = '--';
+  //             newMember.minute = '--';
+  //             showListMember.push(newMember);
+  //           }
+  //         });
+  //       });
+  //       setShowMember(showListMember);
+  //     }
+  //   } else if (compareToday === 'pastday') {
+  //     setShowMember([]);
+  //     const choosedTimeData = listDateTime.filter(
+  //       time => time.time === choosedTime,
+  //     );
+  //     let memberArray = [];
+  //     if (choosedTimeData.length > 0) {
+  //       memberArray = choosedTimeData[0].members;
+  //     }
+  //     let showListMember = [];
+  //     memberArray.forEach(memberID => {
+  //       members.forEach(member => {
+  //         if (member.memberId === memberID && member.leaderId === idUser) {
+  //           showListMember.push(member);
+  //         }
+  //       });
+  //     });
+  //     setShowMember([showListMember]);
+  //   } else {
+  //     let showListMember = [];
+  //     const leader = leaders.find(item => item.id === idUser);
+  //     if (leader !== undefined) {
+  //       let memberArray = [...leader.members];
+  //       memberArray.forEach(memberID => {
+  //         members.forEach(member => {
+  //           if (member.memberId === memberID && member.leaderId === idUser) {
+  //             showListMember.push(member);
+  //           }
+  //         });
+  //       });
+  //       setShowMember(showListMember);
+  //     }
+  //   }
+  // }, [compareToday]);
 
-  console.log(`show data: ${JSON.stringify(showMember)}`);
-
-  useEffect(() => {
-    console.log('todayyyyyyyyyy');
-    let showListMember = [];
-    const leader = leaders.find(item => item.id === idUser);
-    if (leader !== undefined) {
-      let memberArray = [...leader.members];
-      memberArray.forEach(memberID => {
-        members.forEach(member => {
-          if (member.memberId === memberID && member.leaderId === idUser) {
-            showListMember.push(member);
-          }
-        });
-      });
-      setShowMember(showListMember);
-    }
-  }, [showSignInModal]);
+  // useEffect(() => {
+  //   let showListMember = [];
+  //   const leader = leaders.find(item => item.id === idUser);
+  //   if (leader !== undefined) {
+  //     let memberArray = [...leader.members];
+  //     memberArray.forEach(memberID => {
+  //       members.forEach(member => {
+  //         if (member.memberId === memberID && member.leaderId === idUser) {
+  //           showListMember.push(member);
+  //         }
+  //       });
+  //     });
+  //     setShowMember(showListMember);
+  //   }
+  // }, [showSignInModal]);
 
   useEffect(() => {
     const today = convertDate(todayTime);
@@ -186,24 +196,52 @@ function HomeScreen() {
             'client-secret': 'FJ2jHe8exf8zyRm',
           },
           body: JSON.stringify({
-            username: userName,
-            password: password,
+            username: '068C121214',
+            password: 'vcsc1234',
+            // username: userName,
+            // password: password,
           }),
         },
       );
       const json = await response.json();
       const decodeData = jwt_decode(json.data.token);
-      const data = {
-        id: decodeData.accountNo,
-        members: [],
+      const leaderId = decodeData.accountNo;
+
+      const leaderDataToSend = {
+        id: leaderId,
       };
 
-      dispatch(addLeader(data));
+      database()
+        .ref(`/leaders/${leaderId}`)
+        .once('value')
+        .then(snapshot => {
+          const leaderSnapShot = snapshot.val();
+          if (leaderSnapShot === null) {
+            const ref = database().ref(`/leaders/${leaderId}`);
+            ref.set(leaderDataToSend);
+          }
+        });
+      const dateTimeId = uuidv4();
+
+      const dateTimeDataToSend = {
+        dateTimeId: dateTimeId,
+        time: choosedTime,
+      };
+
+      database()
+        .ref(`/dateTimes/${choosedTime}`)
+        .once('value')
+        .then(snapshot => {
+          const dateTimeSnapShot = snapshot.val();
+          if (dateTimeSnapShot === null) {
+            const ref = database().ref(`/dateTimes/${choosedTime}`);
+            ref.set(dateTimeDataToSend);
+          }
+        });
       setIdUser(decodeData.accountNo);
       setSayHello(`Hello, ${decodeData.customerName}`);
 
       setShowSignInModal(!showSignInModal);
-      return json;
     } catch (error) {
       console.error(error);
     }
@@ -246,50 +284,48 @@ function HomeScreen() {
       : Dimensions.get('window').height / 1.7 - keyboardHeight;
 
   const addMemberToList = () => {
-    let idNewMember = uuidv4();
+    const idNewMember = uuidv4();
 
-    const data = {
+    const memberDataToSend = {
       leaderId: idUser,
       memberId: idNewMember,
       fullName: fullName,
       title: title,
-      color: '',
       hour: '--',
-      minute: '--',
+      minite: '--',
+      color: '#D9D9D9',
     };
+    database()
+      .ref(`/members/${idNewMember}`)
+      .once('value')
+      .then(snapshot => {
+        const ref = database().ref(`/members/${idNewMember}`);
+        ref.set(memberDataToSend);
+      });
 
-    const leaderData = {
-      leaderId: idUser,
-      memberId: idNewMember,
-    };
+    const dateTimeRef = database().ref(`/dateTimes/${choosedTime}`);
+    // dateTimeRef.child('members').push(memberDataToSend);
+    dateTimeRef.transaction(currentData => {
+      if (!currentData) {
+        currentData = {};
+      }
 
-    dispatch(addMember(data));
-    dispatch(updateMemberOfLeader(leaderData));
-    setShowMember([...showMember, data]);
+      if (!currentData.members) {
+        currentData.members = [];
+      }
+      currentData.members.push(memberDataToSend);
 
-    const checkDate = listDateTime.find(item => item.time === choosedTime);
-    if (typeof checkDate === 'undefined') {
-      dispatch(
-        addNewDateTime({
-          time: choosedTime,
-          members: [idNewMember],
-        }),
-      );
-    } else {
-      dispatch(
-        addNewDateTime({
-          checkTime: choosedTime,
-          idMember: idNewMember,
-        }),
-      );
-    }
+      return currentData;
+    });
+
+    const leaderRealTime = database().ref(`/leaders/${idUser}`);
+    leaderRealTime.child('members').push(idNewMember);
 
     setShowAddMemberModal(false);
   };
 
   const saveMember = () => {
     if (fullName === '') {
-      console.log('checkkkkk');
       setValidateFullName(true);
     } else {
       setValidateFullName(false);
@@ -314,9 +350,7 @@ function HomeScreen() {
               showTime.getMonth(),
             )}`}</Text>
             <Text style={styles.timeYear}>{showTime.getFullYear()}</Text>
-            <Image
-              source={require('/Users/administrator/Documents/react_native/TimeTrackingApp/src/assets/images/dropDown.png')}
-            />
+            <Image source={require('../../assets/images/dropDown.png')} />
           </View>
 
           {/* weekday*/}
@@ -438,9 +472,7 @@ function HomeScreen() {
           <TouchableOpacity
             style={styles.floatingButton}
             onPress={() => setShowAddMemberModal(true)}>
-            <Image
-              source={require('/Users/administrator/Documents/react_native/TimeTrackingApp/src/assets/images/plus.png')}
-            />
+            <Image source={require('../../assets/images/plus.png')} />
           </TouchableOpacity>
         )}
       </View>
