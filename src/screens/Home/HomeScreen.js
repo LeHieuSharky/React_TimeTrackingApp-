@@ -314,9 +314,7 @@ function HomeScreen() {
               showTime.getMonth(),
             )}`}</Text>
             <Text style={styles.timeYear}>{showTime.getFullYear()}</Text>
-            <Image
-              source={require('/Users/administrator/Documents/react_native/TimeTrackingApp/src/assets/images/dropDown.png')}
-            />
+            <Image source={require('../../assets/images/dropDown.png')} />
           </View>
 
           {/* weekday*/}
@@ -438,9 +436,7 @@ function HomeScreen() {
           <TouchableOpacity
             style={styles.floatingButton}
             onPress={() => setShowAddMemberModal(true)}>
-            <Image
-              source={require('/Users/administrator/Documents/react_native/TimeTrackingApp/src/assets/images/plus.png')}
-            />
+            <Image source={require('../../assets/images/plus.png')} />
           </TouchableOpacity>
         )}
       </View>
