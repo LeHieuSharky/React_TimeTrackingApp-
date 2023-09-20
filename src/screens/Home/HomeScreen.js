@@ -196,7 +196,7 @@ function HomeScreen() {
             'client-secret': 'FJ2jHe8exf8zyRm',
           },
           body: JSON.stringify({
-            username: '068C121213',
+            username: '068C121214',
             password: 'vcsc1234',
             // username: userName,
             // password: password,
@@ -219,6 +219,23 @@ function HomeScreen() {
           if (leaderSnapShot === null) {
             const ref = database().ref(`/leaders/${leaderId}`);
             ref.set(leaderDataToSend);
+          }
+        });
+      const dateTimeId = uuidv4();
+
+      const dateTimeDataToSend = {
+        dateTimeId: dateTimeId,
+        time: choosedTime,
+      };
+
+      database()
+        .ref(`/dateTimes/${choosedTime}`)
+        .once('value')
+        .then(snapshot => {
+          const dateTimeSnapShot = snapshot.val();
+          if (dateTimeSnapShot === null) {
+            const ref = database().ref(`/dateTimes/${choosedTime}`);
+            ref.set(dateTimeDataToSend);
           }
         });
       setIdUser(decodeData.accountNo);
@@ -286,20 +303,20 @@ function HomeScreen() {
         ref.set(memberDataToSend);
       });
 
-    const dateTimeId = uuidv4();
+    const dateTimeRef = database().ref(`/dateTimes/${choosedTime}`);
+    // dateTimeRef.child('members').push(memberDataToSend);
+    dateTimeRef.transaction(currentData => {
+      if (!currentData) {
+        currentData = {};
+      }
 
-    const dateTimeDataToSend = {
-      dateTimeId: dateTimeId,
-      time: choosedTime,
-    };
-    const dateTimeRealTime = database().ref(`/dateTimes/${choosedTime}`);
-    database()
-      .ref(`/dateTimes/${choosedTime}`)
-      .once('value')
-      .then(snapshot => {
-        dateTimeRealTime.set(dateTimeDataToSend);
-      });
-    dateTimeRealTime.child('members').push(memberDataToSend);
+      if (!currentData.members) {
+        currentData.members = [];
+      }
+      currentData.members.push(memberDataToSend);
+
+      return currentData;
+    });
 
     const leaderRealTime = database().ref(`/leaders/${idUser}`);
     leaderRealTime.child('members').push(idNewMember);
