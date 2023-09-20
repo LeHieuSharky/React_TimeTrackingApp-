@@ -53,14 +53,32 @@ function HomeScreen() {
   const [randomeState, setRandomState] = useState(false);
   const todayTime = new Date();
   const moment = require('moment');
+  var Buffer = require('buffer/').Buffer;
+  const dateTimeId = encodeDate(choosedTime);
 
   useEffect(() => {
     const membersListener = database()
-      .ref('/members/')
+      .ref(`/dateTimes/${dateTimeId}`)
       .on('value', snapshot => {
+        try {
+          const memberRealtime = Object.values(snapshot.val().members);
+          const listMember = memberRealtime.filter(
+            member => member.leaderId === idUser,
+          );
+          console.log(`data to show: ${listMember}`);
+          setShowMember([...listMember]);
+        } catch (err) {
+          console.log(err);
+        }
+
         console.log(`Members firebase: ${JSON.stringify(snapshot.val())}`);
       });
+    return () => {
+      database().ref('/members/').off('value', membersListener);
+    };
+  }, [showSignInModal]);
 
+  useEffect(() => {
     const leadersListener = database()
       .ref('/leaders/')
       .on('value', snapshot => {
@@ -73,7 +91,6 @@ function HomeScreen() {
         console.log(`dateTimes firebase: ${JSON.stringify(snapshot.val())}`);
       });
     return () => {
-      database().ref('/members/').off('value', membersListener);
       database().ref('/leaders/').off('value', leadersListener);
       database().ref('/dateTimes/').off('value', dateTimesListener);
     };
@@ -182,6 +199,24 @@ function HomeScreen() {
     }
   }, [showTime]);
 
+  function encodeDate(dateString) {
+    // Use a simple encoding scheme
+    const encoded = Buffer.from(dateString, 'utf-8').toString('base64');
+    return encoded;
+  }
+
+  // Function to decode an encoded string
+  function decodeDate(encodedString) {
+    try {
+      // Decode the base64-encoded string
+      const decoded = Buffer.from(encodedString, 'base64').toString('utf-8');
+      return decoded;
+    } catch (error) {
+      // Handle decoding errors, if any
+      console.error('Error decoding:', error);
+      return null;
+    }
+  }
   const signIn = async () => {
     try {
       const response = await fetch(
@@ -221,7 +256,6 @@ function HomeScreen() {
             ref.set(leaderDataToSend);
           }
         });
-      const dateTimeId = uuidv4();
 
       const dateTimeDataToSend = {
         dateTimeId: dateTimeId,
@@ -229,12 +263,12 @@ function HomeScreen() {
       };
 
       database()
-        .ref(`/dateTimes/${choosedTime}`)
+        .ref(`/dateTimes/${dateTimeId}`)
         .once('value')
         .then(snapshot => {
           const dateTimeSnapShot = snapshot.val();
           if (dateTimeSnapShot === null) {
-            const ref = database().ref(`/dateTimes/${choosedTime}`);
+            const ref = database().ref(`/dateTimes/${dateTimeId}`);
             ref.set(dateTimeDataToSend);
           }
         });
@@ -292,7 +326,7 @@ function HomeScreen() {
       fullName: fullName,
       title: title,
       hour: '--',
-      minite: '--',
+      minute: '--',
       color: '#D9D9D9',
     };
     database()
@@ -303,7 +337,7 @@ function HomeScreen() {
         ref.set(memberDataToSend);
       });
 
-    const dateTimeRef = database().ref(`/dateTimes/${choosedTime}`);
+    const dateTimeRef = database().ref(`/dateTimes/${dateTimeId}`);
     // dateTimeRef.child('members').push(memberDataToSend);
     dateTimeRef.transaction(currentData => {
       if (!currentData) {
