@@ -3,6 +3,7 @@ $FirebaseSDKVersion = '10.15.0'
 
 $RNFirebaseAsStaticFramework = true
 pod 'GoogleUtilities', :modular_headers => true;
+
 # Resolve react_native_pods.rb with node to allow for hoisting
 require Pod::Executable.execute_command('node', ['-p',
   'require.resolve(
@@ -56,7 +57,11 @@ target 'TimeTrackingApp' do
     inherit! :complete
     # Pods for testing
   end
-
+  pod 'Firebase', :modular_headers => true
+  pod 'FirebaseCore', :modular_headers => true
+  pod 'FirebaseCoreInternal', :modular_headers => true
+  pod 'GoogleUtilities', :modular_headers => true
+  
   post_install do |installer|
     # https://github.com/facebook/react-native/blob/main/packages/react-native/scripts/react_native_pods.rb#L197-L202
     react_native_post_install(
