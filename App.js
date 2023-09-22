@@ -12,9 +12,36 @@ export default function App() {
     </Provider>
   );
 }
-
 [
-  {
-    '068C121213': {id: '068C121213', members: [1, 2, 3]},
-  },
+  'Wed Sep 20',
+  [
+    {
+      color: '#D9D9D9',
+      fullName: 'Hieu ne',
+      hour: '--',
+      leaderId: '068C121214',
+      memberId: 'ae22fda9-e294-4688-971e-1d90c7cb5066',
+      minute: '--',
+      title: 'Intern',
+    },
+    {
+      color: '#D9D9D9',
+      fullName: 'Le ne',
+      hour: '--',
+      leaderId: '068C121214',
+      memberId: '1d00b879-519e-4779-903c-59ce3555ac97',
+      minute: '--',
+      title: 'Intern',
+    },
+    {
+      color: '#D9D9D9',
+      fullName: 'Le nam',
+      hour: '--',
+      leaderId: '068C121213',
+      memberId: '97da2dbb-c476-4d92-88de-e00db90e1777',
+      minute: '--',
+      title: 'Intern',
+    },
+  ],
+  'V2VkIFNlcCAyMA==',
 ];

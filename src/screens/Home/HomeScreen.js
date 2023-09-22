@@ -46,34 +46,93 @@ function HomeScreen() {
   const listDateTime = useSelector(state => state.listDateTime);
   const choosedTime = showTime.toString().substring(0, 10);
   const [showMember, setShowMember] = useState([]);
+  const [listMemberId, setListMemberId] = useState([]);
   const [compareToday, setCompareToday] = useState('today');
+  const [listAllMemberOfLeader, setListAllMemberOfLeader] = useState([]);
+  const [lisetMemberInDay, setListMemberInDay] = useState([]);
   const [validateFullName, setValidateFullName] = useState(false);
   const [visibilityAddMemberButton, setVisibilityAddMemberButton] =
     useState(false);
   const [randomeState, setRandomState] = useState(false);
   const todayTime = new Date();
   const moment = require('moment');
+  var Buffer = require('buffer/').Buffer;
+  const dateTimeId = encodeDate(choosedTime);
 
   useEffect(() => {
-    const membersListener = database()
-      .ref('/members/')
+    const dateTimesListener = database()
+      .ref(`/dateTimes/${dateTimeId}`)
       .on('value', snapshot => {
-        console.log(`Members firebase: ${JSON.stringify(snapshot.val())}`);
+        try {
+          const memberRealtime = Object.values(snapshot.val().members);
+          const listMemberAdded = memberRealtime.filter(
+            member => member.leaderId === idUser,
+          );
+          setListMemberInDay([...listMemberAdded]);
+        } catch (err) {
+          console.log(err);
+        }
       });
 
     const leadersListener = database()
+      .ref(`/leaders/${idUser}`)
+      .on('value', snapshot => {
+        try {
+          const memberRealtime = Object.values(snapshot.val().members);
+          setListMemberId([...memberRealtime]);
+        } catch (err) {
+          console.log(err);
+        }
+      });
+
+    const memberListener = database()
+      .ref('/members')
+      .on('value', snapshot => {
+        try {
+          const memberRealtime = Object.values(snapshot.val());
+          const memberOfLeader = memberRealtime.filter(
+            member => member.leaderId === idUser,
+          );
+          setListAllMemberOfLeader([...memberOfLeader]);
+        } catch (err) {
+          console.log(err);
+        }
+      });
+
+    return () => {
+      database().ref('/dateTimes/').off('value', dateTimesListener);
+      database().ref('/leaders/').off('value', leadersListener);
+      database().ref('/members/').off('value', memberListener);
+    };
+  }, [showSignInModal]);
+
+  useEffect(() => {
+    for (let i = 0; i < listAllMemberOfLeader.length; i++) {
+      for (let j = 0; j < lisetMemberInDay.length; j++) {
+        if (
+          listAllMemberOfLeader[i].memberId === lisetMemberInDay[j].memberId
+        ) {
+          listAllMemberOfLeader[i] = lisetMemberInDay[j];
+        }
+      }
+    }
+
+    setShowMember([...listAllMemberOfLeader]);
+  }, [listAllMemberOfLeader, lisetMemberInDay]);
+
+  useEffect(() => {
+    const leadersListener = database()
       .ref('/leaders/')
       .on('value', snapshot => {
-        console.log(`leaders firebase: ${JSON.stringify(snapshot.val())}`);
+        // console.log(`leaders firebase: ${JSON.stringify(snapshot.val())}`);
       });
 
     const dateTimesListener = database()
       .ref('/dateTimes/')
       .on('value', snapshot => {
-        console.log(`dateTimes firebase: ${JSON.stringify(snapshot.val())}`);
+        // console.log(`dateTimes firebase: ${JSON.stringify(snapshot.val())}`);
       });
     return () => {
-      database().ref('/members/').off('value', membersListener);
       database().ref('/leaders/').off('value', leadersListener);
       database().ref('/dateTimes/').off('value', dateTimesListener);
     };
@@ -94,78 +153,46 @@ function HomeScreen() {
     return formattedDate;
   };
 
-  // useEffect(() => {
-  //   if (compareToday === 'future') {
-  //     setRandomState(!randomeState);
-  //     let showListMember = [];
-
-  //     const leader = leaders.find(item => item.id === idUser);
-
-  //     if (leader !== undefined) {
-  //       let memberArray = [...leader.members];
-
-  //       memberArray.forEach(memberID => {
-  //         members.forEach(member => {
-  //           if (member.memberId === memberID && member.leaderId === idUser) {
-  //             const newMember = {...member};
-  //             newMember.hour = '--';
-  //             newMember.minute = '--';
-  //             showListMember.push(newMember);
-  //           }
-  //         });
-  //       });
-  //       setShowMember(showListMember);
-  //     }
-  //   } else if (compareToday === 'pastday') {
-  //     setShowMember([]);
-  //     const choosedTimeData = listDateTime.filter(
-  //       time => time.time === choosedTime,
-  //     );
-  //     let memberArray = [];
-  //     if (choosedTimeData.length > 0) {
-  //       memberArray = choosedTimeData[0].members;
-  //     }
-  //     let showListMember = [];
-  //     memberArray.forEach(memberID => {
-  //       members.forEach(member => {
-  //         if (member.memberId === memberID && member.leaderId === idUser) {
-  //           showListMember.push(member);
-  //         }
-  //       });
-  //     });
-  //     setShowMember([showListMember]);
-  //   } else {
-  //     let showListMember = [];
-  //     const leader = leaders.find(item => item.id === idUser);
-  //     if (leader !== undefined) {
-  //       let memberArray = [...leader.members];
-  //       memberArray.forEach(memberID => {
-  //         members.forEach(member => {
-  //           if (member.memberId === memberID && member.leaderId === idUser) {
-  //             showListMember.push(member);
-  //           }
-  //         });
-  //       });
-  //       setShowMember(showListMember);
-  //     }
-  //   }
-  // }, [compareToday]);
-
-  // useEffect(() => {
-  //   let showListMember = [];
-  //   const leader = leaders.find(item => item.id === idUser);
-  //   if (leader !== undefined) {
-  //     let memberArray = [...leader.members];
-  //     memberArray.forEach(memberID => {
-  //       members.forEach(member => {
-  //         if (member.memberId === memberID && member.leaderId === idUser) {
-  //           showListMember.push(member);
-  //         }
-  //       });
-  //     });
-  //     setShowMember(showListMember);
-  //   }
-  // }, [showSignInModal]);
+  useEffect(() => {
+    if (compareToday === 'future') {
+      database()
+        .ref('/members')
+        .on('value', snapshot => {
+          try {
+            const memberRealtime = Object.values(snapshot.val());
+            const memberOfLeader = memberRealtime.filter(
+              member => member.leaderId === idUser,
+            );
+            setShowMember(memberOfLeader);
+          } catch (err) {
+            console.log(err);
+          }
+        });
+    } else if (compareToday === 'pastday') {
+      database()
+        .ref(`/dateTimes/${dateTimeId}`)
+        .on('value', snapshot => {
+          try {
+            const memberRealtime = Object.values(snapshot.val().members);
+            const listMemberAdded = memberRealtime.filter(
+              member => member.leaderId === idUser,
+            );
+            setShowMember([...listMemberAdded]);
+          } catch (err) {
+            console.log(err);
+          }
+        });
+    } else {
+      listAllMemberOfLeader.forEach(member => {
+        lisetMemberInDay.forEach(memberInDay => {
+          if (member.memberId === memberInDay.memberId) {
+            member = {...memberInDay};
+          }
+        });
+      });
+      setShowMember(listAllMemberOfLeader);
+    }
+  }, [compareToday]);
 
   useEffect(() => {
     const today = convertDate(todayTime);
@@ -182,6 +209,24 @@ function HomeScreen() {
     }
   }, [showTime]);
 
+  function encodeDate(dateString) {
+    // Use a simple encoding scheme
+    const encoded = Buffer.from(dateString, 'utf-8').toString('base64');
+    return encoded;
+  }
+
+  // Function to decode an encoded string
+  function decodeDate(encodedString) {
+    try {
+      // Decode the base64-encoded string
+      const decoded = Buffer.from(encodedString, 'base64').toString('utf-8');
+      return decoded;
+    } catch (error) {
+      // Handle decoding errors, if any
+      console.error('Error decoding:', error);
+      return null;
+    }
+  }
   const signIn = async () => {
     try {
       const response = await fetch(
@@ -221,7 +266,6 @@ function HomeScreen() {
             ref.set(leaderDataToSend);
           }
         });
-      const dateTimeId = uuidv4();
 
       const dateTimeDataToSend = {
         dateTimeId: dateTimeId,
@@ -229,12 +273,12 @@ function HomeScreen() {
       };
 
       database()
-        .ref(`/dateTimes/${choosedTime}`)
+        .ref(`/dateTimes/${dateTimeId}`)
         .once('value')
         .then(snapshot => {
           const dateTimeSnapShot = snapshot.val();
           if (dateTimeSnapShot === null) {
-            const ref = database().ref(`/dateTimes/${choosedTime}`);
+            const ref = database().ref(`/dateTimes/${dateTimeId}`);
             ref.set(dateTimeDataToSend);
           }
         });
@@ -292,7 +336,7 @@ function HomeScreen() {
       fullName: fullName,
       title: title,
       hour: '--',
-      minite: '--',
+      minute: '--',
       color: '#D9D9D9',
     };
     database()
@@ -303,7 +347,7 @@ function HomeScreen() {
         ref.set(memberDataToSend);
       });
 
-    const dateTimeRef = database().ref(`/dateTimes/${choosedTime}`);
+    const dateTimeRef = database().ref(`/dateTimes/${dateTimeId}`);
     // dateTimeRef.child('members').push(memberDataToSend);
     dateTimeRef.transaction(currentData => {
       if (!currentData) {
