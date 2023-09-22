@@ -46,7 +46,10 @@ function HomeScreen() {
   const listDateTime = useSelector(state => state.listDateTime);
   const choosedTime = showTime.toString().substring(0, 10);
   const [showMember, setShowMember] = useState([]);
+  const [listMemberId, setListMemberId] = useState([]);
   const [compareToday, setCompareToday] = useState('today');
+  const [listAllMemberOfLeader, setListAllMemberOfLeader] = useState([]);
+  const [lisetMemberInDay, setListMemberInDay] = useState([]);
   const [validateFullName, setValidateFullName] = useState(false);
   const [visibilityAddMemberButton, setVisibilityAddMemberButton] =
     useState(false);
@@ -57,38 +60,77 @@ function HomeScreen() {
   const dateTimeId = encodeDate(choosedTime);
 
   useEffect(() => {
-    const membersListener = database()
+    const dateTimesListener = database()
       .ref(`/dateTimes/${dateTimeId}`)
       .on('value', snapshot => {
         try {
           const memberRealtime = Object.values(snapshot.val().members);
-          const listMember = memberRealtime.filter(
+          const listMemberAdded = memberRealtime.filter(
             member => member.leaderId === idUser,
           );
-          console.log(`data to show: ${listMember}`);
-          setShowMember([...listMember]);
+          setListMemberInDay([...listMemberAdded]);
         } catch (err) {
           console.log(err);
         }
-
-        console.log(`Members firebase: ${JSON.stringify(snapshot.val())}`);
       });
+
+    const leadersListener = database()
+      .ref(`/leaders/${idUser}`)
+      .on('value', snapshot => {
+        try {
+          const memberRealtime = Object.values(snapshot.val().members);
+          setListMemberId([...memberRealtime]);
+        } catch (err) {
+          console.log(err);
+        }
+      });
+
+    const memberListener = database()
+      .ref('/members')
+      .on('value', snapshot => {
+        try {
+          const memberRealtime = Object.values(snapshot.val());
+          const memberOfLeader = memberRealtime.filter(
+            member => member.leaderId === idUser,
+          );
+          setListAllMemberOfLeader([...memberOfLeader]);
+        } catch (err) {
+          console.log(err);
+        }
+      });
+
     return () => {
-      database().ref('/members/').off('value', membersListener);
+      database().ref('/dateTimes/').off('value', dateTimesListener);
+      database().ref('/leaders/').off('value', leadersListener);
+      database().ref('/members/').off('value', memberListener);
     };
   }, [showSignInModal]);
+
+  useEffect(() => {
+    for (let i = 0; i < listAllMemberOfLeader.length; i++) {
+      for (let j = 0; j < lisetMemberInDay.length; j++) {
+        if (
+          listAllMemberOfLeader[i].memberId === lisetMemberInDay[j].memberId
+        ) {
+          listAllMemberOfLeader[i] = lisetMemberInDay[j];
+        }
+      }
+    }
+
+    setShowMember([...listAllMemberOfLeader]);
+  }, [listAllMemberOfLeader, lisetMemberInDay]);
 
   useEffect(() => {
     const leadersListener = database()
       .ref('/leaders/')
       .on('value', snapshot => {
-        console.log(`leaders firebase: ${JSON.stringify(snapshot.val())}`);
+        // console.log(`leaders firebase: ${JSON.stringify(snapshot.val())}`);
       });
 
     const dateTimesListener = database()
       .ref('/dateTimes/')
       .on('value', snapshot => {
-        console.log(`dateTimes firebase: ${JSON.stringify(snapshot.val())}`);
+        // console.log(`dateTimes firebase: ${JSON.stringify(snapshot.val())}`);
       });
     return () => {
       database().ref('/leaders/').off('value', leadersListener);
@@ -111,78 +153,46 @@ function HomeScreen() {
     return formattedDate;
   };
 
-  // useEffect(() => {
-  //   if (compareToday === 'future') {
-  //     setRandomState(!randomeState);
-  //     let showListMember = [];
-
-  //     const leader = leaders.find(item => item.id === idUser);
-
-  //     if (leader !== undefined) {
-  //       let memberArray = [...leader.members];
-
-  //       memberArray.forEach(memberID => {
-  //         members.forEach(member => {
-  //           if (member.memberId === memberID && member.leaderId === idUser) {
-  //             const newMember = {...member};
-  //             newMember.hour = '--';
-  //             newMember.minute = '--';
-  //             showListMember.push(newMember);
-  //           }
-  //         });
-  //       });
-  //       setShowMember(showListMember);
-  //     }
-  //   } else if (compareToday === 'pastday') {
-  //     setShowMember([]);
-  //     const choosedTimeData = listDateTime.filter(
-  //       time => time.time === choosedTime,
-  //     );
-  //     let memberArray = [];
-  //     if (choosedTimeData.length > 0) {
-  //       memberArray = choosedTimeData[0].members;
-  //     }
-  //     let showListMember = [];
-  //     memberArray.forEach(memberID => {
-  //       members.forEach(member => {
-  //         if (member.memberId === memberID && member.leaderId === idUser) {
-  //           showListMember.push(member);
-  //         }
-  //       });
-  //     });
-  //     setShowMember([showListMember]);
-  //   } else {
-  //     let showListMember = [];
-  //     const leader = leaders.find(item => item.id === idUser);
-  //     if (leader !== undefined) {
-  //       let memberArray = [...leader.members];
-  //       memberArray.forEach(memberID => {
-  //         members.forEach(member => {
-  //           if (member.memberId === memberID && member.leaderId === idUser) {
-  //             showListMember.push(member);
-  //           }
-  //         });
-  //       });
-  //       setShowMember(showListMember);
-  //     }
-  //   }
-  // }, [compareToday]);
-
-  // useEffect(() => {
-  //   let showListMember = [];
-  //   const leader = leaders.find(item => item.id === idUser);
-  //   if (leader !== undefined) {
-  //     let memberArray = [...leader.members];
-  //     memberArray.forEach(memberID => {
-  //       members.forEach(member => {
-  //         if (member.memberId === memberID && member.leaderId === idUser) {
-  //           showListMember.push(member);
-  //         }
-  //       });
-  //     });
-  //     setShowMember(showListMember);
-  //   }
-  // }, [showSignInModal]);
+  useEffect(() => {
+    if (compareToday === 'future') {
+      database()
+        .ref('/members')
+        .on('value', snapshot => {
+          try {
+            const memberRealtime = Object.values(snapshot.val());
+            const memberOfLeader = memberRealtime.filter(
+              member => member.leaderId === idUser,
+            );
+            setShowMember(memberOfLeader);
+          } catch (err) {
+            console.log(err);
+          }
+        });
+    } else if (compareToday === 'pastday') {
+      database()
+        .ref(`/dateTimes/${dateTimeId}`)
+        .on('value', snapshot => {
+          try {
+            const memberRealtime = Object.values(snapshot.val().members);
+            const listMemberAdded = memberRealtime.filter(
+              member => member.leaderId === idUser,
+            );
+            setShowMember([...listMemberAdded]);
+          } catch (err) {
+            console.log(err);
+          }
+        });
+    } else {
+      listAllMemberOfLeader.forEach(member => {
+        lisetMemberInDay.forEach(memberInDay => {
+          if (member.memberId === memberInDay.memberId) {
+            member = {...memberInDay};
+          }
+        });
+      });
+      setShowMember(listAllMemberOfLeader);
+    }
+  }, [compareToday]);
 
   useEffect(() => {
     const today = convertDate(todayTime);
