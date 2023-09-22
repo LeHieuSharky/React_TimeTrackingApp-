@@ -59,6 +59,8 @@ function HomeScreen() {
   var Buffer = require('buffer/').Buffer;
   const dateTimeId = encodeDate(choosedTime);
 
+  const [isUpdateMemberDateTime, setUpdateMemberDateTime] = useState(false);
+
   useEffect(() => {
     const dateTimesListener = database()
       .ref(`/dateTimes/${dateTimeId}`)
@@ -68,6 +70,7 @@ function HomeScreen() {
           const listMemberAdded = memberRealtime.filter(
             member => member.leaderId === idUser,
           );
+          console.log('11222333');
           setListMemberInDay([...listMemberAdded]);
         } catch (err) {
           console.log(err);
@@ -116,7 +119,7 @@ function HomeScreen() {
         }
       }
     }
-
+    console.log('list dataaaaa', listAllMemberOfLeader);
     setShowMember([...listAllMemberOfLeader]);
   }, [listAllMemberOfLeader, lisetMemberInDay]);
 
@@ -215,18 +218,6 @@ function HomeScreen() {
     return encoded;
   }
 
-  // Function to decode an encoded string
-  function decodeDate(encodedString) {
-    try {
-      // Decode the base64-encoded string
-      const decoded = Buffer.from(encodedString, 'base64').toString('utf-8');
-      return decoded;
-    } catch (error) {
-      // Handle decoding errors, if any
-      console.error('Error decoding:', error);
-      return null;
-    }
-  }
   const signIn = async () => {
     try {
       const response = await fetch(
@@ -376,6 +367,24 @@ function HomeScreen() {
       addMemberToList();
     }
   };
+
+  const updateHourMinute = (memberId, value, isHour) => {
+    const dateTimeRef = database().ref(`/dateTimes/${dateTimeId}`);
+    dateTimeRef.transaction(currentData => {
+      if (currentData) {
+        const memberRealtime = Object.values(currentData.members);
+        const updatedMembers = memberRealtime.map(member => {
+          if (member.memberId === memberId) {
+            isHour ? (member.hour = value) : (member.minute = value);
+          }
+          return member;
+        });
+        currentData.members = updatedMembers;
+      }
+      return currentData;
+    });
+  };
+
   return (
     <SafeAreaView style={{flex: 1}}>
       <StatusBar />
@@ -418,7 +427,15 @@ function HomeScreen() {
                   hour={item.hour}
                   minute={item.minute}
                   color={'#D9D9D9'}
+                  dateTimeId={dateTimeId}
+                  leaderId={idUser}
                   checkFuture={compareToday}
+                  updateHour={value => {
+                    updateHourMinute(item.memberId, value, true);
+                  }}
+                  updateMinute={value => {
+                    updateHourMinute(item.memberId, value, false);
+                  }}
                 />
               )}
               keyExtractor={item => item.id}
