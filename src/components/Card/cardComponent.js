@@ -1,12 +1,7 @@
 import styles from './styles';
 import React, {useEffect, useState, useRef} from 'react';
-import {
-  Text,
-  TextInput,
-  TouchableOpacity,
-  TouchableWithoutFeedback,
-  View,
-} from 'react-native';
+
+import {Text, TextInput, View} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {
   updateHourOfMember,
@@ -99,6 +94,9 @@ export default function CardComponent(props) {
               if (value.length === 2) {
                 minuteInputRef.current.focus();
               }
+
+              props.updateHour(value);
+
               dispatch(
                 updateHourOfMember({
                   id: props.id,
@@ -126,6 +124,7 @@ export default function CardComponent(props) {
             ref={minuteInputRef}
             style={styles.timeInput}
             onChangeText={value => {
+              props.updateMinute(value);
               dispatch(
                 updateMinuteOfMember({
                   id: props.id,
