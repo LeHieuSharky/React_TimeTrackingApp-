@@ -70,7 +70,6 @@ function HomeScreen() {
           const listMemberAdded = memberRealtime.filter(
             member => member.leaderId === idUser,
           );
-          console.log('11222333');
           setListMemberInDay([...listMemberAdded]);
         } catch (err) {
           console.log(err);
@@ -330,6 +329,7 @@ function HomeScreen() {
       minute: '--',
       color: '#D9D9D9',
     };
+
     database()
       .ref(`/members/${idNewMember}`)
       .once('value')
@@ -348,7 +348,18 @@ function HomeScreen() {
       if (!currentData.members) {
         currentData.members = [];
       }
-      currentData.members.push(memberDataToSend);
+
+      if (compareToday === 'today') {
+        console.log('22222222');
+        currentData.members.push(memberDataToSend);
+      } else {
+        let newListMemberOfLeader = [
+          ...listAllMemberOfLeader,
+          memberDataToSend,
+        ];
+        console.log('1111111');
+        dateTimeRef.child('members').set(newListMemberOfLeader);
+      }
 
       return currentData;
     });
