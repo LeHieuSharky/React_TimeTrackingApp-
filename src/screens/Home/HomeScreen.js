@@ -91,6 +91,8 @@ function HomeScreen() {
             member => member.leaderId === idUser,
           );
           setListAllMemberOfLeader([...memberOfLeader]);
+
+          let listMemberAdded = [];
           database()
             .ref(`/dateTimes/${dateTimeId}`)
             .once('value')
@@ -99,12 +101,13 @@ function HomeScreen() {
                 const dateTimeRealTime = Object.values(
                   dateTimeSnapshot.val().members,
                 );
-                const listMemberAdded = dateTimeRealTime.filter(
+                listMemberAdded = dateTimeRealTime.filter(
                   member => member.leaderId === idUser,
                 );
-                setListMemberInDay([...listMemberAdded]);
+                setShowMember([...listMemberAdded]);
               } catch (err) {
-                console.log('loi ne');
+                const dateTimeRef = database().ref(`/dateTimes/${dateTimeId}`);
+                dateTimeRef.child('members').set(listMemberAdded);
                 console.log(err);
               }
             });
@@ -120,18 +123,18 @@ function HomeScreen() {
     };
   }, [showSignInModal]);
 
-  useEffect(() => {
-    for (let i = 0; i < listAllMemberOfLeader.length; i++) {
-      for (let j = 0; j < lisetMemberInDay.length; j++) {
-        if (
-          listAllMemberOfLeader[i].memberId === lisetMemberInDay[j].memberId
-        ) {
-          listAllMemberOfLeader[i] = lisetMemberInDay[j];
-        }
-      }
-    }
-    setShowMember([...listAllMemberOfLeader]);
-  }, [listAllMemberOfLeader, lisetMemberInDay]);
+  // useEffect(() => {
+  //   for (let i = 0; i < listAllMemberOfLeader.length; i++) {
+  //     for (let j = 0; j < lisetMemberInDay.length; j++) {
+  //       if (
+  //         listAllMemberOfLeader[i].memberId === lisetMemberInDay[j].memberId
+  //       ) {
+  //         listAllMemberOfLeader[i] = lisetMemberInDay[j];
+  //       }
+  //     }
+  //   }
+  //   setShowMember([...listAllMemberOfLeader]);
+  // }, [listAllMemberOfLeader, lisetMemberInDay]);
 
   useEffect(() => {
     const leadersListener = database()
@@ -196,14 +199,22 @@ function HomeScreen() {
           }
         });
     } else {
-      listAllMemberOfLeader.forEach(member => {
-        lisetMemberInDay.forEach(memberInDay => {
-          if (member.memberId === memberInDay.memberId) {
-            member = {...memberInDay};
+      database()
+        .ref(`/dateTimes/${dateTimeId}`)
+        .once('value')
+        .then(dateTimeSnapshot => {
+          try {
+            const dateTimeRealTime = Object.values(
+              dateTimeSnapshot.val().members,
+            );
+            const dateTimeMember = dateTimeRealTime.filter(
+              member => member.leaderId === idUser,
+            );
+            setShowMember([...dateTimeMember]);
+          } catch (err) {
+            console.log(err);
           }
         });
-      });
-      setShowMember(listAllMemberOfLeader);
     }
   }, [compareToday]);
 
