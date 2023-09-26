@@ -62,24 +62,17 @@ function HomeScreen() {
   const [isUpdateMemberDateTime, setUpdateMemberDateTime] = useState(false);
 
   useEffect(() => {
-    const dateTimesListener = database()
-      .ref(`/dateTimes/${dateTimeId}`)
-      .on('value', snapshot => {
-        try {
-          const memberRealtime = Object.values(snapshot.val().members);
-          const listMemberAdded = memberRealtime.filter(
-            member => member.leaderId === idUser,
-          );
-          console.log('11222333');
-          setListMemberInDay([...listMemberAdded]);
-        } catch (err) {
-          console.log(err);
-        }
-      });
+    return () => {
+      const dateTimeRef = database().ref(`/dateTimes/${dateTimeId}`);
+      dateTimeRef.child('members').set(showMember);
+    };
+  }, []);
 
-    const leadersListener = database()
+  useEffect(() => {
+    database()
       .ref(`/leaders/${idUser}`)
-      .on('value', snapshot => {
+      .once('value')
+      .then(snapshot => {
         try {
           const memberRealtime = Object.values(snapshot.val().members);
           setListMemberId([...memberRealtime]);
@@ -88,40 +81,44 @@ function HomeScreen() {
         }
       });
 
-    const memberListener = database()
+    database()
       .ref('/members')
-      .on('value', snapshot => {
+      .once('value')
+      .then(snapshot => {
         try {
           const memberRealtime = Object.values(snapshot.val());
           const memberOfLeader = memberRealtime.filter(
             member => member.leaderId === idUser,
           );
           setListAllMemberOfLeader([...memberOfLeader]);
+
+          database()
+            .ref(`/dateTimes/${dateTimeId}`)
+            .once('value')
+            .then(dateTimeSnapshot => {
+              try {
+                const dateTimeRealTime = Object.values(
+                  dateTimeSnapshot.val().members,
+                );
+                const listMemberAdded = dateTimeRealTime.filter(
+                  member => member.leaderId === idUser,
+                );
+                setShowMember([...listMemberAdded]);
+              } catch (err) {
+                console.log('erorrrrrrrr');
+                console.log('dataaaaa', memberOfLeader);
+                const dateTimeRef = database().ref(`/dateTimes/${dateTimeId}`);
+                dateTimeRef.child('members').set(memberOfLeader);
+                console.log(err);
+              }
+            });
         } catch (err) {
           console.log(err);
         }
       });
 
-    return () => {
-      database().ref('/dateTimes/').off('value', dateTimesListener);
-      database().ref('/leaders/').off('value', leadersListener);
-      database().ref('/members/').off('value', memberListener);
-    };
+    return () => {};
   }, [showSignInModal]);
-
-  useEffect(() => {
-    for (let i = 0; i < listAllMemberOfLeader.length; i++) {
-      for (let j = 0; j < lisetMemberInDay.length; j++) {
-        if (
-          listAllMemberOfLeader[i].memberId === lisetMemberInDay[j].memberId
-        ) {
-          listAllMemberOfLeader[i] = lisetMemberInDay[j];
-        }
-      }
-    }
-    console.log('list dataaaaa', listAllMemberOfLeader);
-    setShowMember([...listAllMemberOfLeader]);
-  }, [listAllMemberOfLeader, lisetMemberInDay]);
 
   useEffect(() => {
     const leadersListener = database()
@@ -160,7 +157,7 @@ function HomeScreen() {
     if (compareToday === 'future') {
       database()
         .ref('/members')
-        .on('value', snapshot => {
+        .once('value', snapshot => {
           try {
             const memberRealtime = Object.values(snapshot.val());
             const memberOfLeader = memberRealtime.filter(
@@ -186,14 +183,22 @@ function HomeScreen() {
           }
         });
     } else {
-      listAllMemberOfLeader.forEach(member => {
-        lisetMemberInDay.forEach(memberInDay => {
-          if (member.memberId === memberInDay.memberId) {
-            member = {...memberInDay};
+      database()
+        .ref(`/dateTimes/${dateTimeId}`)
+        .once('value')
+        .then(dateTimeSnapshot => {
+          try {
+            const dateTimeRealTime = Object.values(
+              dateTimeSnapshot.val().members,
+            );
+            const dateTimeMember = dateTimeRealTime.filter(
+              member => member.leaderId === idUser,
+            );
+            setShowMember([...dateTimeMember]);
+          } catch (err) {
+            console.log(err);
           }
         });
-      });
-      setShowMember(listAllMemberOfLeader);
     }
   }, [compareToday]);
 
@@ -330,6 +335,9 @@ function HomeScreen() {
       minute: '--',
       color: '#D9D9D9',
     };
+
+    setShowMember([...showMember, memberDataToSend]);
+
     database()
       .ref(`/members/${idNewMember}`)
       .once('value')
@@ -348,7 +356,22 @@ function HomeScreen() {
       if (!currentData.members) {
         currentData.members = [];
       }
-      currentData.members.push(memberDataToSend);
+
+      if (compareToday === 'today') {
+        currentData.members.push(memberDataToSend);
+      } else {
+        const dateTimeDataToSend = {
+          dateTimeId: dateTimeId,
+          time: choosedTime,
+        };
+
+        let newListMemberOfLeader = [
+          ...listAllMemberOfLeader,
+          memberDataToSend,
+        ];
+        dateTimeRef.set(dateTimeDataToSend);
+        dateTimeRef.child('members').set(newListMemberOfLeader);
+      }
 
       return currentData;
     });
@@ -369,20 +392,20 @@ function HomeScreen() {
   };
 
   const updateHourMinute = (memberId, value, isHour) => {
-    const dateTimeRef = database().ref(`/dateTimes/${dateTimeId}`);
-    dateTimeRef.transaction(currentData => {
-      if (currentData) {
-        const memberRealtime = Object.values(currentData.members);
-        const updatedMembers = memberRealtime.map(member => {
-          if (member.memberId === memberId) {
-            isHour ? (member.hour = value) : (member.minute = value);
-          }
-          return member;
-        });
-        currentData.members = updatedMembers;
+    const newShowMember = showMember.map(member => {
+      if (member.memberId === memberId) {
+        return {
+          ...member,
+          hour: isHour ? value : member.hour,
+          minute: !isHour ? value : member.minute,
+        };
       }
-      return currentData;
+      return member;
     });
+    const dateTimeRef = database().ref(`/dateTimes/${dateTimeId}`);
+    setShowMember(newShowMember);
+    dateTimeRef.child('members').set(newShowMember);
+    console.log('show membersssss: ', newShowMember);
   };
 
   return (
