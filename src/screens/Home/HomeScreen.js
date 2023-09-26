@@ -9,12 +9,10 @@ import DatePicker from 'react-native-date-picker';
 import {useKeyboard} from '../../services/heightKeyboard';
 import CardComponent from '../../components/Card/cardComponent';
 import {useDispatch, useSelector} from 'react-redux';
-import {addMember} from '../../redux/HomeScreen/Members/memberSlice';
-import {addLeader} from '../../redux/HomeScreen/Auth/authSlice';
-import {addNewDateTime} from '../../redux/HomeScreen/DateTime/dateTimeSlice';
-import {updateMemberOfLeader} from '../../redux/HomeScreen/Auth/authSlice';
+import {rememberLoggedIn} from '../../redux/HomeScreen/Auth/authSlice';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import database from '@react-native-firebase/database';
+
 import {
   SafeAreaView,
   StatusBar,
@@ -41,25 +39,24 @@ function HomeScreen() {
   const [showAddMemnberModal, setShowAddMemberModal] = useState(false);
   const keyboardHeight = useKeyboard();
   const dispatch = useDispatch();
-  const members = useSelector(state => state.members);
-  const leaders = useSelector(state => state.leaders);
-  const listDateTime = useSelector(state => state.listDateTime);
+  const loggedInState = useSelector(state => state.loggedIn);
   const choosedTime = showTime.toString().substring(0, 10);
   const [showMember, setShowMember] = useState([]);
-  const [listMemberId, setListMemberId] = useState([]);
   const [compareToday, setCompareToday] = useState('today');
   const [listAllMemberOfLeader, setListAllMemberOfLeader] = useState([]);
-  const [lisetMemberInDay, setListMemberInDay] = useState([]);
   const [validateFullName, setValidateFullName] = useState(false);
   const [visibilityAddMemberButton, setVisibilityAddMemberButton] =
     useState(false);
-  const [randomeState, setRandomState] = useState(false);
   const todayTime = new Date();
   const moment = require('moment');
   var Buffer = require('buffer/').Buffer;
   const dateTimeId = encodeDate(choosedTime);
 
-  const [isUpdateMemberDateTime, setUpdateMemberDateTime] = useState(false);
+  useEffect(() => {
+    if (loggedInState.isLoggedIn) {
+      setUserName(loggedInState.userName);
+    }
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -237,10 +234,10 @@ function HomeScreen() {
             'client-secret': 'FJ2jHe8exf8zyRm',
           },
           body: JSON.stringify({
-            username: '068C121214',
-            password: 'vcsc1234',
-            // username: userName,
-            // password: password,
+            // username: '068C121214',
+            // password: 'vcsc1234',
+            username: userName,
+            password: password,
           }),
         },
       );
@@ -280,6 +277,13 @@ function HomeScreen() {
         });
       setIdUser(decodeData.accountNo);
       setSayHello(`Hello, ${decodeData.customerName}`);
+
+      dispatch(
+        rememberLoggedIn({
+          userName: userName,
+          isLoggedIn: true,
+        }),
+      );
 
       setShowSignInModal(!showSignInModal);
     } catch (error) {
@@ -595,6 +599,7 @@ function HomeScreen() {
                   onChangeText={newText => setUserName(newText)}
                   value={userName}
                 />
+
                 {/* password */}
                 <InputField
                   placeholder={'vcsc1234'}
