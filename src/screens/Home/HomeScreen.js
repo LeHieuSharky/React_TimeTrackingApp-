@@ -92,7 +92,6 @@ function HomeScreen() {
           );
           setListAllMemberOfLeader([...memberOfLeader]);
 
-          let listMemberAdded = [];
           database()
             .ref(`/dateTimes/${dateTimeId}`)
             .once('value')
@@ -101,13 +100,15 @@ function HomeScreen() {
                 const dateTimeRealTime = Object.values(
                   dateTimeSnapshot.val().members,
                 );
-                listMemberAdded = dateTimeRealTime.filter(
+                const listMemberAdded = dateTimeRealTime.filter(
                   member => member.leaderId === idUser,
                 );
                 setShowMember([...listMemberAdded]);
               } catch (err) {
+                console.log('erorrrrrrrr');
+                console.log('dataaaaa', memberOfLeader);
                 const dateTimeRef = database().ref(`/dateTimes/${dateTimeId}`);
-                dateTimeRef.child('members').set(listMemberAdded);
+                dateTimeRef.child('members').set(memberOfLeader);
                 console.log(err);
               }
             });
@@ -116,25 +117,8 @@ function HomeScreen() {
         }
       });
 
-    return () => {
-      // database().ref('/dateTimes/').off('value', dateTimesListener);
-      // database().ref('/leaders/').off('value', leadersListener);
-      // database().ref('/members/').off('value', memberListener);
-    };
+    return () => {};
   }, [showSignInModal]);
-
-  // useEffect(() => {
-  //   for (let i = 0; i < listAllMemberOfLeader.length; i++) {
-  //     for (let j = 0; j < lisetMemberInDay.length; j++) {
-  //       if (
-  //         listAllMemberOfLeader[i].memberId === lisetMemberInDay[j].memberId
-  //       ) {
-  //         listAllMemberOfLeader[i] = lisetMemberInDay[j];
-  //       }
-  //     }
-  //   }
-  //   setShowMember([...listAllMemberOfLeader]);
-  // }, [listAllMemberOfLeader, lisetMemberInDay]);
 
   useEffect(() => {
     const leadersListener = database()
@@ -173,7 +157,7 @@ function HomeScreen() {
     if (compareToday === 'future') {
       database()
         .ref('/members')
-        .on('value', snapshot => {
+        .once('value', snapshot => {
           try {
             const memberRealtime = Object.values(snapshot.val());
             const memberOfLeader = memberRealtime.filter(
