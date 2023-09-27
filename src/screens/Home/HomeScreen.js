@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useRef} from 'react';
 import styles from './styles';
 import 'react-native-get-random-values';
 import {v4 as uuidv4} from 'uuid';
@@ -53,6 +53,8 @@ function HomeScreen() {
   const moment = require('moment');
   var Buffer = require('buffer/').Buffer;
   const dateTimeId = encodeDate(choosedTime);
+  const titleRef = useRef(null);
+  const passwordRef = useRef(null);
 
   useEffect(() => {
     if (loggedInState.isLoggedIn) {
@@ -500,6 +502,7 @@ function HomeScreen() {
                 <InputField
                   placeholder={'Enter your member name'}
                   keyboardType={'default'}
+                  autoFocus
                   selectionColor={'#2D9CDB'}
                   validateColor={validateFullName ? '#EB5757' : null}
                   title={validateFullName ? 'Full name *' : 'Full name'}
@@ -507,9 +510,13 @@ function HomeScreen() {
                     setValidateFullName(false);
                     setFullName(newText);
                   }}
+                  returnKeyType="next"
                   value={fullName}
                   validateMessage={'Full name is required'}
                   checkFullNameIsNull={validateFullName}
+                  onSubmit={() => {
+                    titleRef.current.focus();
+                  }}
                 />
                 {/* title */}
                 <InputField
@@ -517,8 +524,11 @@ function HomeScreen() {
                   keyboardType={'default'}
                   selectionColor={'#2D9CDB'}
                   title={'Title'}
+                  inputRef={titleRef}
+                  returnKeyType="done"
                   onChangeText={newText => setTitle(newText)}
                   value={title}
+                  onSubmit={() => {}}
                 />
               </View>
               {/* save button */}
@@ -576,12 +586,17 @@ function HomeScreen() {
                   placeholder={'Enter your username'}
                   validateColor={signInValidation ? '#EB5757' : null}
                   keyboardType={'default'}
+                  autoFocus
                   selectionColor={'#2D9CDB'}
                   title={'Username'}
+                  returnKeyType="next"
                   onChangeText={newText => setUserName(newText)}
                   value={userName}
                   validateMessage={'Username or password is not corrent'}
                   checkFullNameIsNull={signInValidation}
+                  onSubmit={() => {
+                    passwordRef.current.focus();
+                  }}
                 />
 
                 {/* password */}
@@ -591,8 +606,11 @@ function HomeScreen() {
                   selectionColor={'#2D9CDB'}
                   validateColor={validateFullName ? '#EB5757' : null}
                   title={'Password'}
+                  inputRef={passwordRef}
+                  returnKeyType="done"
                   onChangeText={newText => setPassword(newText)}
                   value={password}
+                  onSubmit={() => {}}
                 />
               </View>
               {/* Sign in button */}
