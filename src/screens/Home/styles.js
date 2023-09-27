@@ -103,12 +103,12 @@ const styles = StyleSheet.create({
   },
   floatingButton: {
     position: 'absolute',
-    width: 30,
-    height: 30,
+    width: 35,
+    height: 35,
     alignItems: 'center',
     justifyContent: 'center',
-    right: 20,
-    bottom: 10,
+    right: 30,
+    bottom: 50,
     marginTop: 100,
   },
 });

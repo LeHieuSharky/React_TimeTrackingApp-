@@ -8,11 +8,12 @@ const styles = StyleSheet.create({
   },
   field: {
     borderBottomWidth: 1,
-    height: 35,
+    height: 38,
     padding: 10,
     color: '#BDBDBD',
     paddingLeft: 0,
     fontSize: 14,
+
     fontWeight: '300',
     lineHeight: 'normal',
     fontFamily: 'Inter-Regular',
