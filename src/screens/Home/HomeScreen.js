@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import styles from './styles';
 import 'react-native-get-random-values';
 import {v4 as uuidv4} from 'uuid';
@@ -66,18 +66,6 @@ function HomeScreen() {
   }, []);
 
   useEffect(() => {
-    database()
-      .ref(`/leaders/${idUser}`)
-      .once('value')
-      .then(snapshot => {
-        try {
-          const memberRealtime = Object.values(snapshot.val().members);
-          setListMemberId([...memberRealtime]);
-        } catch (err) {
-          console.log(err);
-        }
-      });
-
     database()
       .ref('/members')
       .once('value')
@@ -165,20 +153,6 @@ function HomeScreen() {
             console.log(err);
           }
         });
-    } else if (compareToday === 'pastday') {
-      database()
-        .ref(`/dateTimes/${dateTimeId}`)
-        .on('value', snapshot => {
-          try {
-            const memberRealtime = Object.values(snapshot.val().members);
-            const listMemberAdded = memberRealtime.filter(
-              member => member.leaderId === idUser,
-            );
-            setShowMember([...listMemberAdded]);
-          } catch (err) {
-            console.log(err);
-          }
-        });
     } else {
       database()
         .ref(`/dateTimes/${dateTimeId}`)
@@ -215,7 +189,6 @@ function HomeScreen() {
   }, [showTime]);
 
   function encodeDate(dateString) {
-    // Use a simple encoding scheme
     const encoded = Buffer.from(dateString, 'utf-8').toString('base64');
     return encoded;
   }
@@ -234,8 +207,6 @@ function HomeScreen() {
             'client-secret': 'FJ2jHe8exf8zyRm',
           },
           body: JSON.stringify({
-            // username: '068C121214',
-            // password: 'vcsc1234',
             username: userName,
             password: password,
           }),
