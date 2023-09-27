@@ -117,6 +117,9 @@ export default function CardComponent(props) {
               if (hourInput === '') {
                 setHourInput('--');
               }
+              if (hourInput.length < 2) {
+                props.updateHour(`0${hourInput}`);
+              }
             }}
           />
           <Text style={styles.timeInput}>:</Text>
@@ -144,6 +147,9 @@ export default function CardComponent(props) {
             onBlur={() => {
               if (minuteInput === '') {
                 setMinuteInput('--');
+              }
+              if (minuteInput.length < 2) {
+                props.updateMinute(`0${minuteInput}`);
               }
             }}
           />

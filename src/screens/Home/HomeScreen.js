@@ -45,9 +45,11 @@ function HomeScreen() {
   const [compareToday, setCompareToday] = useState('today');
   const [listAllMemberOfLeader, setListAllMemberOfLeader] = useState([]);
   const [validateFullName, setValidateFullName] = useState(false);
+  const [listDateTimeId, setListDateTimeId] = useState([]);
   const [visibilityAddMemberButton, setVisibilityAddMemberButton] =
     useState(false);
   const todayTime = new Date();
+  const [signInValidation, setSignInValidation] = useState(false);
   const moment = require('moment');
   var Buffer = require('buffer/').Buffer;
   const dateTimeId = encodeDate(choosedTime);
@@ -103,26 +105,25 @@ function HomeScreen() {
         }
       });
 
+    database()
+      .ref('/dateTimes')
+      .once('value')
+      .then(snapshot => {
+        try {
+          let listId = [];
+          const dateTimeRealTime = Object.values(snapshot.val());
+          dateTimeRealTime.forEach(date => {
+            listId.push(date.dateTimeId);
+          });
+          setListDateTimeId([...listId]);
+        } catch (err) {
+          console.log(err);
+        }
+      });
     return () => {};
   }, [showSignInModal]);
 
-  useEffect(() => {
-    const leadersListener = database()
-      .ref('/leaders/')
-      .on('value', snapshot => {
-        // console.log(`leaders firebase: ${JSON.stringify(snapshot.val())}`);
-      });
-
-    const dateTimesListener = database()
-      .ref('/dateTimes/')
-      .on('value', snapshot => {
-        // console.log(`dateTimes firebase: ${JSON.stringify(snapshot.val())}`);
-      });
-    return () => {
-      database().ref('/leaders/').off('value', leadersListener);
-      database().ref('/dateTimes/').off('value', dateTimesListener);
-    };
-  }, [showMember]);
+  console.log('datetimeeeeee: ', JSON.stringify(listDateTimeId));
 
   useEffect(preState => {
     setShowSignInModal(!preState);
@@ -321,35 +322,35 @@ function HomeScreen() {
         const ref = database().ref(`/members/${idNewMember}`);
         ref.set(memberDataToSend);
       });
+    listDateTimeId.forEach(id => {
+      const dateTimeRef = database().ref(`/dateTimes/${id}`);
+      dateTimeRef.transaction(currentData => {
+        if (!currentData) {
+          currentData = {};
+        }
 
-    const dateTimeRef = database().ref(`/dateTimes/${dateTimeId}`);
-    // dateTimeRef.child('members').push(memberDataToSend);
-    dateTimeRef.transaction(currentData => {
-      if (!currentData) {
-        currentData = {};
-      }
+        if (!currentData.members) {
+          currentData.members = [];
+        }
 
-      if (!currentData.members) {
-        currentData.members = [];
-      }
+        if (compareToday === 'today') {
+          currentData.members.push(memberDataToSend);
+        } else {
+          const dateTimeDataToSend = {
+            dateTimeId: dateTimeId,
+            time: choosedTime,
+          };
 
-      if (compareToday === 'today') {
-        currentData.members.push(memberDataToSend);
-      } else {
-        const dateTimeDataToSend = {
-          dateTimeId: dateTimeId,
-          time: choosedTime,
-        };
+          let newListMemberOfLeader = [
+            ...listAllMemberOfLeader,
+            memberDataToSend,
+          ];
+          dateTimeRef.set(dateTimeDataToSend);
+          dateTimeRef.child('members').set(newListMemberOfLeader);
+        }
 
-        let newListMemberOfLeader = [
-          ...listAllMemberOfLeader,
-          memberDataToSend,
-        ];
-        dateTimeRef.set(dateTimeDataToSend);
-        dateTimeRef.child('members').set(newListMemberOfLeader);
-      }
-
-      return currentData;
+        return currentData;
+      });
     });
 
     const leaderRealTime = database().ref(`/leaders/${idUser}`);
@@ -364,6 +365,14 @@ function HomeScreen() {
     } else {
       setValidateFullName(false);
       addMemberToList();
+    }
+  };
+
+  const validateSignIn = () => {
+    if (idUser === '') {
+      setSignInValidation(true);
+    } else {
+      setSignInValidation(false);
     }
   };
 
@@ -564,19 +573,23 @@ function HomeScreen() {
               <View style={styles.columnInput}>
                 {/* useName */}
                 <InputField
-                  placeholder={'068C121214'}
+                  placeholder={'Enter your username'}
+                  validateColor={signInValidation ? '#EB5757' : null}
                   keyboardType={'default'}
                   selectionColor={'#2D9CDB'}
                   title={'Username'}
                   onChangeText={newText => setUserName(newText)}
                   value={userName}
+                  validateMessage={'Username or password is not corrent'}
+                  checkFullNameIsNull={signInValidation}
                 />
 
                 {/* password */}
                 <InputField
-                  placeholder={'vcsc1234'}
+                  placeholder={'Enter your password'}
                   keyboardType={'default'}
                   selectionColor={'#2D9CDB'}
+                  validateColor={validateFullName ? '#EB5757' : null}
                   title={'Password'}
                   onChangeText={newText => setPassword(newText)}
                   value={password}
