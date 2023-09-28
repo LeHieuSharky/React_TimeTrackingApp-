@@ -22,6 +22,8 @@ import {
   Alert,
   Image,
   Dimensions,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import ReactNativeModal from 'react-native-modal';
 
@@ -54,6 +56,8 @@ function HomeScreen() {
   const dateTimeId = encodeDate(choosedTime);
   const titleRef = useRef(null);
   const passwordRef = useRef(null);
+  const minuteInputRef = useRef(null);
+  const hourInputRef = useRef(null);
 
   useEffect(() => {
     if (loggedInState.isLoggedIn) {
@@ -121,8 +125,6 @@ function HomeScreen() {
       });
     return () => {};
   }, [showSignInModal]);
-
-  console.log('datetimeeeeee: ', JSON.stringify(listDateTimeId));
 
   useEffect(preState => {
     setShowSignInModal(!preState);
@@ -454,238 +456,256 @@ function HomeScreen() {
     console.log('show membersssss: ', newShowMember);
   };
 
+  useEffect(() => {
+    if (hourInputRef.current) {
+      hourInputRef.current.blur();
+    }
+    if (minuteInputRef.current) {
+      minuteInputRef.current.blur();
+    }
+    Keyboard.dismiss();
+  }, [compareToday]);
+
   return (
-    <View style={{flex: 1, marginTop: StatusBar.currentHeight + 16}}>
-      <StatusBar />
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <View style={{flex: 1, marginTop: StatusBar.currentHeight + 16}}>
+        <StatusBar />
 
-      <View style={styles.parrentColumn}>
-        <TouchableOpacity
-          onPress={() => {
-            setDateTimePicker(true);
-          }}>
-          {/* row  include: date, month, year and timePickerButton*/}
-          <View style={styles.rowDateTime}>
-            <Text
-              style={
-                styles.timeDateMonth
-              }>{`${showTime.getDate()} ${formatMonth(
-              showTime.getMonth(),
-            )}`}</Text>
-            <Text style={styles.timeYear}>{showTime.getFullYear()}</Text>
-            <Image source={require('../../assets/images/dropDown.png')} />
-          </View>
-
-          {/* weekday*/}
-          <Text style={styles.weeksDay}>{formatDay(showTime.getDay())}</Text>
-        </TouchableOpacity>
-
-        {/* say Hello useName */}
-        <Text style={styles.sayHello}>{sayHello}</Text>
-
-        {/* List of member card */}
-        {sayHello === '' ? null : (
-          <KeyboardAwareScrollView>
-            <FlatList
-              style={[styles.listCard]}
-              data={showMember}
-              renderItem={({item}) => (
-                <CardComponent
-                  fullName={item.fullName}
-                  title={item.title}
-                  id={item.memberId}
-                  hour={item.hour}
-                  minute={item.minute}
-                  color={'#D9D9D9'}
-                  dateTimeId={dateTimeId}
-                  leaderId={idUser}
-                  checkFuture={compareToday}
-                  updateHour={value => {
-                    updateHourMinute(item.memberId, value, true);
-                  }}
-                  updateMinute={value => {
-                    updateHourMinute(item.memberId, value, false);
-                  }}
-                />
-              )}
-              keyExtractor={item => item.id}
-            />
-          </KeyboardAwareScrollView>
-        )}
-
-        {/* Date time picker */}
-        <DatePicker
-          modal
-          open={showDateTimePicker}
-          date={showTime}
-          mode="date"
-          onConfirm={date => {
-            setShowTime(date);
-
-            setDateTimePicker(false);
-          }}
-          onCancel={() => {
-            setDateTimePicker(false);
-          }}
-        />
-
-        {/* add new member Modal */}
-
-        <ReactNativeModal
-          animationType="slide"
-          transparent={true}
-          style={{marginHorizontal: 40}}
-          onBackdropPress={() => {
-            setShowAddMemberModal(false);
-          }}
-          visible={showAddMemnberModal}
-          onRequestClose={() => {
-            Alert.alert('Modal has been closed.');
-            setShowSignInModal(!showAddMemnberModal);
-          }}>
-          <View
-            style={
-              (styles.modalPositionAddMember,
-              {
-                marginBottom: keyboardHeight === 0 ? 0 : 200,
-              })
-            }>
-            <View style={styles.modalView}>
-              {/* add new member */}
-              <View style={styles.titleModal}>
-                <Text style={styles.signIn}>Add a member</Text>
-                <Text style={styles.toYourAccount}>to your team</Text>
-              </View>
-              {/* Text input for fullName and Title*/}
-              <View style={styles.columnInput}>
-                {/* fullName */}
-                <InputField
-                  placeholder={'Enter your member name'}
-                  keyboardType={'default'}
-                  autoFocus
-                  selectionColor={'#2D9CDB'}
-                  validateColor={validateFullName ? '#EB5757' : null}
-                  title={validateFullName ? 'Full name *' : 'Full name'}
-                  onChangeText={newText => {
-                    setValidateFullName(false);
-                    setFullName(newText);
-                  }}
-                  returnKeyType="next"
-                  value={fullName}
-                  validateMessage={'Full name is required'}
-                  checkFullNameIsNull={validateFullName}
-                  onSubmit={() => {
-                    titleRef.current.focus();
-                  }}
-                />
-                {/* title */}
-                <InputField
-                  placeholder={'Enter your member title'}
-                  keyboardType={'default'}
-                  selectionColor={'#2D9CDB'}
-                  title={'Title'}
-                  inputRef={titleRef}
-                  returnKeyType="done"
-                  onChangeText={newText => setTitle(newText)}
-                  value={title}
-                  onSubmit={() => {}}
-                />
-              </View>
-              {/* save button */}
-              <View style={styles.buttonModal}>
-                <TouchableOpacityComponent
-                  content={'Save'}
-                  onPress={() => {
-                    setFullName('');
-                    setPassword('');
-                    saveMember();
-                  }}
-                />
-              </View>
-            </View>
-          </View>
-        </ReactNativeModal>
-
-        {/* floating button */}
-        {sayHello === '' || visibilityAddMemberButton ? null : (
+        <View style={styles.parrentColumn}>
           <TouchableOpacity
-            style={styles.floatingButton}
-            onPress={() => setShowAddMemberModal(true)}>
-            <Image source={require('../../assets/images/plus.png')} />
+            onPress={() => {
+              hourInputRef.current.blur();
+              minuteInputRef.current.blur();
+              Keyboard.dismiss();
+              setDateTimePicker(true);
+            }}>
+            {/* row  include: date, month, year and timePickerButton*/}
+            <View style={styles.rowDateTime}>
+              <Text
+                style={
+                  styles.timeDateMonth
+                }>{`${showTime.getDate()} ${formatMonth(
+                showTime.getMonth(),
+              )}`}</Text>
+              <Text style={styles.timeYear}>{showTime.getFullYear()}</Text>
+              <Image source={require('../../assets/images/dropDown.png')} />
+            </View>
+
+            {/* weekday*/}
+            <Text style={styles.weeksDay}>{formatDay(showTime.getDay())}</Text>
           </TouchableOpacity>
-        )}
-      </View>
 
-      {/* Sign in Modal */}
-      <View style={{backgroundColor: '#BDBDBD', height: '100%'}}>
-        <ReactNativeModal
-          animationType="slide"
-          transparent={true}
-          visible={showSignInModal}
-          onRequestClose={() => {
-            Alert.alert('Modal has been closed.');
-            setShowSignInModal(!showSignInModal);
-          }}>
-          <View
-            style={[
-              styles.modalPosition,
-              {
-                marginTop: marginOfModal(),
-              },
-            ]}>
-            <View style={styles.modalView}>
-              {/* Sign in to your account */}
-              <View style={styles.titleModal}>
-                <Text style={styles.signIn}>Sign in</Text>
-                <Text style={styles.toYourAccount}>to your account</Text>
-              </View>
-              {/* Text input for userName password */}
-              <View style={styles.columnInput}>
-                {/* useName */}
-                <InputField
-                  placeholder={'Enter your username'}
-                  validateColor={signInValidation ? '#EB5757' : null}
-                  keyboardType={'default'}
-                  autoFocus
-                  selectionColor={'#2D9CDB'}
-                  title={'Username'}
-                  returnKeyType="next"
-                  onChangeText={newText => setUserName(newText)}
-                  value={userName}
-                  validateMessage={'Username or password is not corrent'}
-                  checkFullNameIsNull={signInValidation}
-                  onSubmit={() => {
-                    passwordRef.current.focus();
-                  }}
-                />
+          {/* say Hello useName */}
+          <Text style={styles.sayHello}>{sayHello}</Text>
 
-                {/* password */}
-                <InputField
-                  placeholder={'Enter your password'}
-                  keyboardType={'default'}
-                  selectionColor={'#2D9CDB'}
-                  validateColor={validateFullName ? '#EB5757' : null}
-                  title={'Password'}
-                  inputRef={passwordRef}
-                  returnKeyType="done"
-                  onChangeText={newText => setPassword(newText)}
-                  value={password}
-                  onSubmit={() => {}}
-                />
-              </View>
-              {/* Sign in button */}
-              <View style={styles.buttonModal}>
-                <TouchableOpacityComponent
-                  content={'Sign in'}
-                  onPress={() => {
-                    signIn();
-                  }}
-                />
+          {/* List of member card */}
+          {sayHello === '' ? null : (
+            <KeyboardAwareScrollView>
+              <FlatList
+                style={[styles.listCard]}
+                data={showMember}
+                renderItem={({item}) => (
+                  <CardComponent
+                    fullName={item.fullName}
+                    title={item.title}
+                    id={item.memberId}
+                    hour={item.hour}
+                    minute={item.minute}
+                    color={'#D9D9D9'}
+                    hourInputRef={hourInputRef}
+                    minuteInputRef={minuteInputRef}
+                    compareToday={compareToday}
+                    dateTimeId={dateTimeId}
+                    leaderId={idUser}
+                    checkFuture={compareToday}
+                    updateHour={value => {
+                      updateHourMinute(item.memberId, value, true);
+                    }}
+                    updateMinute={value => {
+                      updateHourMinute(item.memberId, value, false);
+                    }}
+                  />
+                )}
+                keyExtractor={item => item.id}
+              />
+            </KeyboardAwareScrollView>
+          )}
+
+          {/* Date time picker */}
+          <DatePicker
+            modal
+            open={showDateTimePicker}
+            date={showTime}
+            mode="date"
+            onConfirm={date => {
+              setShowTime(date);
+
+              setDateTimePicker(false);
+            }}
+            onCancel={() => {
+              setDateTimePicker(false);
+            }}
+          />
+
+          {/* add new member Modal */}
+
+          <ReactNativeModal
+            animationType="slide"
+            transparent={true}
+            style={{marginHorizontal: 40}}
+            onBackdropPress={() => {
+              setShowAddMemberModal(false);
+            }}
+            visible={showAddMemnberModal}
+            onRequestClose={() => {
+              Alert.alert('Modal has been closed.');
+              setShowSignInModal(!showAddMemnberModal);
+            }}>
+            <View
+              style={
+                (styles.modalPositionAddMember,
+                {
+                  marginBottom: keyboardHeight === 0 ? 0 : 200,
+                })
+              }>
+              <View style={styles.modalView}>
+                {/* add new member */}
+                <View style={styles.titleModal}>
+                  <Text style={styles.signIn}>Add a member</Text>
+                  <Text style={styles.toYourAccount}>to your team</Text>
+                </View>
+                {/* Text input for fullName and Title*/}
+                <View style={styles.columnInput}>
+                  {/* fullName */}
+                  <InputField
+                    placeholder={'Enter your member name'}
+                    keyboardType={'default'}
+                    autoFocus
+                    selectionColor={'#2D9CDB'}
+                    validateColor={validateFullName ? '#EB5757' : null}
+                    title={validateFullName ? 'Full name *' : 'Full name'}
+                    onChangeText={newText => {
+                      setValidateFullName(false);
+                      setFullName(newText);
+                    }}
+                    returnKeyType="next"
+                    value={fullName}
+                    validateMessage={'Full name is required'}
+                    checkFullNameIsNull={validateFullName}
+                    onSubmit={() => {
+                      titleRef.current.focus();
+                    }}
+                  />
+                  {/* title */}
+                  <InputField
+                    placeholder={'Enter your member title'}
+                    keyboardType={'default'}
+                    selectionColor={'#2D9CDB'}
+                    title={'Title'}
+                    inputRef={titleRef}
+                    returnKeyType="done"
+                    onChangeText={newText => setTitle(newText)}
+                    value={title}
+                    onSubmit={() => {}}
+                  />
+                </View>
+                {/* save button */}
+                <View style={styles.buttonModal}>
+                  <TouchableOpacityComponent
+                    content={'Save'}
+                    onPress={() => {
+                      setFullName('');
+                      setPassword('');
+                      saveMember();
+                    }}
+                  />
+                </View>
               </View>
             </View>
-          </View>
-        </ReactNativeModal>
+          </ReactNativeModal>
+
+          {/* floating button */}
+          {sayHello === '' || visibilityAddMemberButton ? null : (
+            <TouchableOpacity
+              style={styles.floatingButton}
+              onPress={() => setShowAddMemberModal(true)}>
+              <Image source={require('../../assets/images/plus.png')} />
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {/* Sign in Modal */}
+        <View style={{backgroundColor: '#BDBDBD', height: '100%'}}>
+          <ReactNativeModal
+            animationType="slide"
+            transparent={true}
+            visible={showSignInModal}
+            onRequestClose={() => {
+              Alert.alert('Modal has been closed.');
+              setShowSignInModal(!showSignInModal);
+            }}>
+            <View
+              style={[
+                styles.modalPosition,
+                {
+                  marginTop: marginOfModal(),
+                },
+              ]}>
+              <View style={styles.modalView}>
+                {/* Sign in to your account */}
+                <View style={styles.titleModal}>
+                  <Text style={styles.signIn}>Sign in</Text>
+                  <Text style={styles.toYourAccount}>to your account</Text>
+                </View>
+                {/* Text input for userName password */}
+                <View style={styles.columnInput}>
+                  {/* useName */}
+                  <InputField
+                    placeholder={'Enter your username'}
+                    validateColor={signInValidation ? '#EB5757' : null}
+                    keyboardType={'default'}
+                    autoFocus
+                    selectionColor={'#2D9CDB'}
+                    title={'Username'}
+                    returnKeyType="next"
+                    onChangeText={newText => setUserName(newText)}
+                    value={userName}
+                    validateMessage={'Username or password is not corrent'}
+                    checkFullNameIsNull={signInValidation}
+                    onSubmit={() => {
+                      passwordRef.current.focus();
+                    }}
+                  />
+
+                  {/* password */}
+                  <InputField
+                    placeholder={'Enter your password'}
+                    keyboardType={'default'}
+                    selectionColor={'#2D9CDB'}
+                    validateColor={validateFullName ? '#EB5757' : null}
+                    title={'Password'}
+                    inputRef={passwordRef}
+                    returnKeyType="done"
+                    onChangeText={newText => setPassword(newText)}
+                    value={password}
+                    onSubmit={() => {}}
+                  />
+                </View>
+                {/* Sign in button */}
+                <View style={styles.buttonModal}>
+                  <TouchableOpacityComponent
+                    content={'Sign in'}
+                    onPress={() => {
+                      signIn();
+                    }}
+                  />
+                </View>
+              </View>
+            </View>
+          </ReactNativeModal>
+        </View>
       </View>
-    </View>
+    </TouchableWithoutFeedback>
   );
 }
 

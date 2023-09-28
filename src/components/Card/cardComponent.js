@@ -1,7 +1,13 @@
 import styles from './styles';
 import React, {useEffect, useState, useRef} from 'react';
 
-import {Text, TextInput, View} from 'react-native';
+import {
+  Text,
+  Keyboard,
+  TextInput,
+  TouchableWithoutFeedback,
+  View,
+} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {
   updateHourOfMember,
@@ -12,8 +18,8 @@ export default function CardComponent(props) {
   const [hourInput, setHourInput] = useState('--');
   const [minuteInput, setMinuteInput] = useState('--');
   const [checkFuture, setCheckFuture] = useState('');
-  const minuteInputRef = useRef(null);
-  const hourInputRef = useRef(null);
+  // const props.minuteInputRef = useRef(null);
+  // const props.hourInputRef = useRef(null);
   const dispatch = useDispatch();
   const [color, setColor] = useState('#D9D9D9');
 
@@ -67,94 +73,112 @@ export default function CardComponent(props) {
       return '#D9D9D9 ';
     }
   };
-
+  // const handleContainerPress = () => {
+  //   // Unfocus the TextInput components
+  //   if (props.hourInputRef.current) {
+  //     props.hourInputRef.current.blur();
+  //   }
+  //   if (props.minuteInputRef.current) {
+  //     props.minuteInputRef.current.blur();
+  //   }
+  //   Keyboard.dismiss();
+  // };
   return (
-    <View style={styles.container}>
-      <View style={styles.row}>
-        <View style={styles.circleAndName}>
-          <View
-            style={[
-              styles.circle,
-              {
-                backgroundColor: checkFuture === 'future' ? '#D9D9D9' : color,
-              },
-            ]}
-          />
-          <View style={styles.fullNameAndTitleColumn}>
-            <Text style={styles.fullName}>{props.fullName}</Text>
-            <Text style={styles.title}>{props.title}</Text>
+    <TouchableWithoutFeedback>
+      <View style={styles.container}>
+        <View style={styles.row}>
+          <View style={styles.circleAndName}>
+            <View
+              style={[
+                styles.circle,
+                {
+                  backgroundColor: checkFuture === 'future' ? '#D9D9D9' : color,
+                },
+              ]}
+            />
+            <View style={styles.fullNameAndTitleColumn}>
+              <Text style={styles.fullName}>{props.fullName}</Text>
+              <Text style={styles.title}>{props.title}</Text>
+            </View>
+          </View>
+          <View style={styles.timePickerRow}>
+            <TextInput
+              editable={checkFuture === 'pastday' ? false : true}
+              ref={props.hourInputRef}
+              style={styles.timeInput}
+              onChangeText={value => {
+                if (value.length === 2) {
+                  props.minuteInputRef.current.focus();
+                }
+
+                props.updateHour(value);
+
+                dispatch(
+                  updateHourOfMember({
+                    id: props.id,
+                    hour: value,
+                  }),
+                );
+                setHourInput(value);
+              }}
+              value={checkFuture === 'future' ? '--' : hourInput}
+              maxLength={2}
+              keyboardType="numeric"
+              onFocus={() => {
+                props.compareToday === 'today'
+                  ? null
+                  : props.hourInputRef.current.blur();
+                if (hourInput === '--') {
+                  setHourInput('');
+                }
+              }}
+              onBlur={() => {
+                if (hourInput === '') {
+                  setHourInput('--');
+                }
+
+                if (hourInput.length < 2) {
+                  props.updateHour(`0${hourInput}`);
+                }
+              }}
+            />
+            <Text style={styles.timeInput}>:</Text>
+            <TextInput
+              ref={props.minuteInputRef}
+              style={styles.timeInput}
+              onChangeText={value => {
+                props.updateMinute(value);
+                dispatch(
+                  updateMinuteOfMember({
+                    id: props.id,
+                    minute: value,
+                  }),
+                );
+                setMinuteInput(value);
+              }}
+              value={checkFuture === 'future' ? '--' : minuteInput}
+              keyboardType="numeric"
+              maxLength={2}
+              onFocus={() => {
+                props.compareToday === 'today'
+                  ? null
+                  : props.minuteInputRef.current.blur();
+                if (minuteInput === '--') {
+                  setMinuteInput('');
+                }
+              }}
+              onBlur={() => {
+                if (minuteInput === '') {
+                  setMinuteInput('--');
+                }
+                if (minuteInput.length < 2) {
+                  props.updateMinute(`0${minuteInput}`);
+                }
+              }}
+            />
           </View>
         </View>
-        <View style={styles.timePickerRow}>
-          <TextInput
-            editable={checkFuture === 'pastday' ? false : true}
-            ref={hourInputRef}
-            style={styles.timeInput}
-            onChangeText={value => {
-              if (value.length === 2) {
-                minuteInputRef.current.focus();
-              }
-
-              props.updateHour(value);
-
-              dispatch(
-                updateHourOfMember({
-                  id: props.id,
-                  hour: value,
-                }),
-              );
-              setHourInput(value);
-            }}
-            value={checkFuture === 'future' ? '--' : hourInput}
-            maxLength={2}
-            keyboardType="numeric"
-            onFocus={() => {
-              if (hourInput === '--') {
-                setHourInput('');
-              }
-            }}
-            onBlur={() => {
-              if (hourInput === '') {
-                setHourInput('--');
-              }
-              if (hourInput.length < 2) {
-                props.updateHour(`0${hourInput}`);
-              }
-            }}
-          />
-          <Text style={styles.timeInput}>:</Text>
-          <TextInput
-            ref={minuteInputRef}
-            style={styles.timeInput}
-            onChangeText={value => {
-              props.updateMinute(value);
-              dispatch(
-                updateMinuteOfMember({
-                  id: props.id,
-                  minute: value,
-                }),
-              );
-              setMinuteInput(value);
-            }}
-            value={checkFuture === 'future' ? '--' : minuteInput}
-            keyboardType="numeric"
-            maxLength={2}
-            onFocus={() => {
-              if (minuteInput === '--') {
-                setMinuteInput('');
-              }
-            }}
-            onBlur={() => {
-              if (minuteInput === '') {
-                setMinuteInput('--');
-              }
-              if (minuteInput.length < 2) {
-                props.updateMinute(`0${minuteInput}`);
-              }
-            }}
-          />
-        </View>
       </View>
-    </View>
+    </TouchableWithoutFeedback>
   );
 }
