@@ -14,7 +14,6 @@ import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import database from '@react-native-firebase/database';
 
 import {
-  SafeAreaView,
   StatusBar,
   Text,
   TouchableOpacity,
@@ -40,7 +39,7 @@ function HomeScreen() {
   const keyboardHeight = useKeyboard();
   const dispatch = useDispatch();
   const loggedInState = useSelector(state => state.loggedIn);
-  const choosedTime = showTime.toString().substring(0, 10);
+  const choosedTime = showTime.toString().substring(0, 15);
   const [showMember, setShowMember] = useState([]);
   const [compareToday, setCompareToday] = useState('today');
   const [listAllMemberOfLeader, setListAllMemberOfLeader] = useState([]);
@@ -94,8 +93,6 @@ function HomeScreen() {
                 );
                 setShowMember([...listMemberAdded]);
               } catch (err) {
-                console.log('erorrrrrrrr');
-                console.log('dataaaaa', memberOfLeader);
                 const dateTimeRef = database().ref(`/dateTimes/${dateTimeId}`);
                 dateTimeRef.child('members').set(memberOfLeader);
                 setShowMember([...memberOfLeader]);
@@ -152,11 +149,63 @@ function HomeScreen() {
             const memberOfLeader = memberRealtime.filter(
               member => member.leaderId === idUser,
             );
-            setShowMember(memberOfLeader);
+            setShowMember([...memberOfLeader]);
           } catch (err) {
             console.log(err);
           }
         });
+    } else if (compareToday === 'pastday') {
+      let pastDayList = [];
+      database()
+        .ref(`/dateTimes/${dateTimeId}`)
+        .once('value')
+        .then(dateTimeSnapshot => {
+          try {
+            const dateTimeRealTime = Object.values(
+              dateTimeSnapshot.val().members,
+            );
+            const dateTimeMember = dateTimeRealTime.filter(
+              member => member.leaderId === idUser,
+            );
+            let pastDayListMember = [];
+            database()
+              .ref('/members')
+              .once('value')
+              .then(snapshot => {
+                const memberRealtime = Object.values(snapshot.val());
+                const memberOfLeader = memberRealtime.filter(
+                  member => member.leaderId === idUser,
+                );
+                memberOfLeader.forEach(memberLeader => {
+                  dateTimeMember.forEach(timeMember => {
+                    if (memberLeader.memberId === timeMember.memberId) {
+                      console.log('111111');
+                      pastDayListMember.push({...timeMember});
+                    } else {
+                      console.log('2222222');
+                      pastDayListMember.push({...memberLeader});
+                    }
+                  });
+                });
+              });
+            console.log('past dat: ', pastDayListMember);
+            setShowMember([...pastDayListMember]);
+          } catch (err) {
+            database()
+              .ref('/members')
+              .once('value')
+              .then(snapshot => {
+                const memberRealtime = Object.values(snapshot.val());
+                pastDayList = memberRealtime.filter(
+                  member => member.leaderId === idUser,
+                );
+                setShowMember([...pastDayList]);
+              });
+            console.log(err);
+          }
+        });
+      const dateTimeRef = database().ref(`/dateTimes/${dateTimeId}`);
+      dateTimeRef.child('members').set([...pastDayList]);
     } else {
       database()
         .ref(`/dateTimes/${dateTimeId}`)
@@ -212,7 +261,8 @@ function HomeScreen() {
           },
           body: JSON.stringify({
             username: userName,
-            password: password,
+            // password: password,
+            password: 'vcsc1234',
           }),
         },
       );
@@ -324,35 +374,52 @@ function HomeScreen() {
         const ref = database().ref(`/members/${idNewMember}`);
         ref.set(memberDataToSend);
       });
-    listDateTimeId.forEach(id => {
-      const dateTimeRef = database().ref(`/dateTimes/${id}`);
-      dateTimeRef.transaction(currentData => {
-        if (!currentData) {
-          currentData = {};
-        }
+    const dateTimeRef = database().ref(`/dateTimes/${dateTimeId}`);
+    dateTimeRef.transaction(currentData => {
+      if (!currentData) {
+        currentData = {};
+      }
 
-        if (!currentData.members) {
-          currentData.members = [];
-        }
+      if (!currentData.members) {
+        currentData.members = [];
+      }
 
-        if (compareToday === 'today') {
-          currentData.members.push(memberDataToSend);
-        } else {
-          const dateTimeDataToSend = {
-            dateTimeId: dateTimeId,
-            time: choosedTime,
-          };
+      if (compareToday === 'today') {
+        currentData.members.push(memberDataToSend);
+      } else {
+        const dateTimeDataToSend = {
+          dateTimeId: dateTimeId,
+          time: choosedTime,
+        };
 
-          let newListMemberOfLeader = [
-            ...listAllMemberOfLeader,
-            memberDataToSend,
-          ];
-          dateTimeRef.set(dateTimeDataToSend);
-          dateTimeRef.child('members').set(newListMemberOfLeader);
-        }
+        let newListMemberOfLeader = [
+          ...listAllMemberOfLeader,
+          memberDataToSend,
+        ];
+        dateTimeRef.set(dateTimeDataToSend);
+        dateTimeRef.child('members').set(newListMemberOfLeader);
+      }
 
-        return currentData;
-      });
+      return currentData;
+    });
+
+    const toDay = Date().toString().substring(0, 15);
+    const toDayId = encodeDate(toDay);
+    const toDayRef = database().ref(`/dateTimes/${toDayId}`);
+    console.log('to day idddd: ', toDayId);
+    toDayRef.transaction(toDayTrans => {
+      if (!toDayTrans) {
+        toDayTrans = {};
+      }
+
+      if (!toDayTrans.members) {
+        toDayTrans.members = [];
+      }
+      if (compareToday !== 'today') {
+        toDayTrans.members.push(memberDataToSend);
+      }
+
+      return toDayTrans;
     });
 
     const leaderRealTime = database().ref(`/leaders/${idUser}`);
@@ -367,14 +434,6 @@ function HomeScreen() {
     } else {
       setValidateFullName(false);
       addMemberToList();
-    }
-  };
-
-  const validateSignIn = () => {
-    if (idUser === '') {
-      setSignInValidation(true);
-    } else {
-      setSignInValidation(false);
     }
   };
 
@@ -428,7 +487,7 @@ function HomeScreen() {
           <KeyboardAwareScrollView>
             <FlatList
               style={[styles.listCard]}
-              data={compareToday === 'pastday' ? showMember[0] : showMember}
+              data={showMember}
               renderItem={({item}) => (
                 <CardComponent
                   fullName={item.fullName}
