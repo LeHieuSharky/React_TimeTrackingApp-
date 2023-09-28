@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useRef} from 'react';
 import styles from './styles';
 import 'react-native-get-random-values';
 import {v4 as uuidv4} from 'uuid';
@@ -14,7 +14,6 @@ import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import database from '@react-native-firebase/database';
 
 import {
-  SafeAreaView,
   StatusBar,
   Text,
   TouchableOpacity,
@@ -40,17 +39,21 @@ function HomeScreen() {
   const keyboardHeight = useKeyboard();
   const dispatch = useDispatch();
   const loggedInState = useSelector(state => state.loggedIn);
-  const choosedTime = showTime.toString().substring(0, 10);
+  const choosedTime = showTime.toString().substring(0, 15);
   const [showMember, setShowMember] = useState([]);
   const [compareToday, setCompareToday] = useState('today');
   const [listAllMemberOfLeader, setListAllMemberOfLeader] = useState([]);
   const [validateFullName, setValidateFullName] = useState(false);
+  const [listDateTimeId, setListDateTimeId] = useState([]);
   const [visibilityAddMemberButton, setVisibilityAddMemberButton] =
     useState(false);
   const todayTime = new Date();
+  const [signInValidation, setSignInValidation] = useState(false);
   const moment = require('moment');
   var Buffer = require('buffer/').Buffer;
   const dateTimeId = encodeDate(choosedTime);
+  const titleRef = useRef(null);
+  const passwordRef = useRef(null);
 
   useEffect(() => {
     if (loggedInState.isLoggedIn) {
@@ -90,8 +93,6 @@ function HomeScreen() {
                 );
                 setShowMember([...listMemberAdded]);
               } catch (err) {
-                console.log('erorrrrrrrr');
-                console.log('dataaaaa', memberOfLeader);
                 const dateTimeRef = database().ref(`/dateTimes/${dateTimeId}`);
                 dateTimeRef.child('members').set(memberOfLeader);
                 setShowMember([...memberOfLeader]);
@@ -103,26 +104,25 @@ function HomeScreen() {
         }
       });
 
+    database()
+      .ref('/dateTimes')
+      .once('value')
+      .then(snapshot => {
+        try {
+          let listId = [];
+          const dateTimeRealTime = Object.values(snapshot.val());
+          dateTimeRealTime.forEach(date => {
+            listId.push(date.dateTimeId);
+          });
+          setListDateTimeId([...listId]);
+        } catch (err) {
+          console.log(err);
+        }
+      });
     return () => {};
   }, [showSignInModal]);
 
-  useEffect(() => {
-    const leadersListener = database()
-      .ref('/leaders/')
-      .on('value', snapshot => {
-        // console.log(`leaders firebase: ${JSON.stringify(snapshot.val())}`);
-      });
-
-    const dateTimesListener = database()
-      .ref('/dateTimes/')
-      .on('value', snapshot => {
-        // console.log(`dateTimes firebase: ${JSON.stringify(snapshot.val())}`);
-      });
-    return () => {
-      database().ref('/leaders/').off('value', leadersListener);
-      database().ref('/dateTimes/').off('value', dateTimesListener);
-    };
-  }, [showMember]);
+  console.log('datetimeeeeee: ', JSON.stringify(listDateTimeId));
 
   useEffect(preState => {
     setShowSignInModal(!preState);
@@ -149,11 +149,63 @@ function HomeScreen() {
             const memberOfLeader = memberRealtime.filter(
               member => member.leaderId === idUser,
             );
-            setShowMember(memberOfLeader);
+            setShowMember([...memberOfLeader]);
           } catch (err) {
             console.log(err);
           }
         });
+    } else if (compareToday === 'pastday') {
+      let pastDayList = [];
+      database()
+        .ref(`/dateTimes/${dateTimeId}`)
+        .once('value')
+        .then(dateTimeSnapshot => {
+          try {
+            const dateTimeRealTime = Object.values(
+              dateTimeSnapshot.val().members,
+            );
+            const dateTimeMember = dateTimeRealTime.filter(
+              member => member.leaderId === idUser,
+            );
+            let pastDayListMember = [];
+            database()
+              .ref('/members')
+              .once('value')
+              .then(snapshot => {
+                const memberRealtime = Object.values(snapshot.val());
+                const memberOfLeader = memberRealtime.filter(
+                  member => member.leaderId === idUser,
+                );
+                memberOfLeader.forEach(memberLeader => {
+                  dateTimeMember.forEach(timeMember => {
+                    if (memberLeader.memberId === timeMember.memberId) {
+                      console.log('111111');
+                      pastDayListMember.push({...timeMember});
+                    } else {
+                      console.log('2222222');
+                      pastDayListMember.push({...memberLeader});
+                    }
+                  });
+                });
+              });
+            console.log('past dat: ', pastDayListMember);
+            setShowMember([...pastDayListMember]);
+          } catch (err) {
+            database()
+              .ref('/members')
+              .once('value')
+              .then(snapshot => {
+                const memberRealtime = Object.values(snapshot.val());
+                pastDayList = memberRealtime.filter(
+                  member => member.leaderId === idUser,
+                );
+                setShowMember([...pastDayList]);
+              });
+            console.log(err);
+          }
+        });
+      const dateTimeRef = database().ref(`/dateTimes/${dateTimeId}`);
+      dateTimeRef.child('members').set([...pastDayList]);
     } else {
       database()
         .ref(`/dateTimes/${dateTimeId}`)
@@ -209,7 +261,8 @@ function HomeScreen() {
           },
           body: JSON.stringify({
             username: userName,
-            password: password,
+            // password: password,
+            password: 'vcsc1234',
           }),
         },
       );
@@ -321,9 +374,7 @@ function HomeScreen() {
         const ref = database().ref(`/members/${idNewMember}`);
         ref.set(memberDataToSend);
       });
-
     const dateTimeRef = database().ref(`/dateTimes/${dateTimeId}`);
-    // dateTimeRef.child('members').push(memberDataToSend);
     dateTimeRef.transaction(currentData => {
       if (!currentData) {
         currentData = {};
@@ -350,6 +401,25 @@ function HomeScreen() {
       }
 
       return currentData;
+    });
+
+    const toDay = Date().toString().substring(0, 15);
+    const toDayId = encodeDate(toDay);
+    const toDayRef = database().ref(`/dateTimes/${toDayId}`);
+    console.log('to day idddd: ', toDayId);
+    toDayRef.transaction(toDayTrans => {
+      if (!toDayTrans) {
+        toDayTrans = {};
+      }
+
+      if (!toDayTrans.members) {
+        toDayTrans.members = [];
+      }
+      if (compareToday !== 'today') {
+        toDayTrans.members.push(memberDataToSend);
+      }
+
+      return toDayTrans;
     });
 
     const leaderRealTime = database().ref(`/leaders/${idUser}`);
@@ -417,7 +487,7 @@ function HomeScreen() {
           <KeyboardAwareScrollView>
             <FlatList
               style={[styles.listCard]}
-              data={compareToday === 'pastday' ? showMember[0] : showMember}
+              data={showMember}
               renderItem={({item}) => (
                 <CardComponent
                   fullName={item.fullName}
@@ -491,6 +561,7 @@ function HomeScreen() {
                 <InputField
                   placeholder={'Enter your member name'}
                   keyboardType={'default'}
+                  autoFocus
                   selectionColor={'#2D9CDB'}
                   validateColor={validateFullName ? '#EB5757' : null}
                   title={validateFullName ? 'Full name *' : 'Full name'}
@@ -498,9 +569,13 @@ function HomeScreen() {
                     setValidateFullName(false);
                     setFullName(newText);
                   }}
+                  returnKeyType="next"
                   value={fullName}
                   validateMessage={'Full name is required'}
                   checkFullNameIsNull={validateFullName}
+                  onSubmit={() => {
+                    titleRef.current.focus();
+                  }}
                 />
                 {/* title */}
                 <InputField
@@ -508,8 +583,11 @@ function HomeScreen() {
                   keyboardType={'default'}
                   selectionColor={'#2D9CDB'}
                   title={'Title'}
+                  inputRef={titleRef}
+                  returnKeyType="done"
                   onChangeText={newText => setTitle(newText)}
                   value={title}
+                  onSubmit={() => {}}
                 />
               </View>
               {/* save button */}
@@ -564,22 +642,34 @@ function HomeScreen() {
               <View style={styles.columnInput}>
                 {/* useName */}
                 <InputField
-                  placeholder={'068C121214'}
+                  placeholder={'Enter your username'}
+                  validateColor={signInValidation ? '#EB5757' : null}
                   keyboardType={'default'}
+                  autoFocus
                   selectionColor={'#2D9CDB'}
                   title={'Username'}
+                  returnKeyType="next"
                   onChangeText={newText => setUserName(newText)}
                   value={userName}
+                  validateMessage={'Username or password is not corrent'}
+                  checkFullNameIsNull={signInValidation}
+                  onSubmit={() => {
+                    passwordRef.current.focus();
+                  }}
                 />
 
                 {/* password */}
                 <InputField
-                  placeholder={'vcsc1234'}
+                  placeholder={'Enter your password'}
                   keyboardType={'default'}
                   selectionColor={'#2D9CDB'}
+                  validateColor={validateFullName ? '#EB5757' : null}
                   title={'Password'}
+                  inputRef={passwordRef}
+                  returnKeyType="done"
                   onChangeText={newText => setPassword(newText)}
                   value={password}
+                  onSubmit={() => {}}
                 />
               </View>
               {/* Sign in button */}

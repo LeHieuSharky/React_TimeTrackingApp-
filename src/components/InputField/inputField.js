@@ -28,17 +28,23 @@ function InputField(params) {
         {params.title}
       </Text>
       <TextInput
+        ref={params.inputRef}
         style={[styles.field, {borderBottomColor: focusColor()}]}
         onChangeText={params.onChangeText}
         value={params.value}
+        autoFocus={params.autoFocus === true}
         placeholder={params.placeholder}
         keyboardType={params.keyboardType}
         numberOfLines={1}
+        returnKeyType={params.returnKeyType}
         onFocus={() => {
           handleOnFocus();
         }}
         onBlur={() => {
           handleOnBlur();
+        }}
+        onSubmitEditing={() => {
+          params.onSubmit();
         }}
       />
       {!params.checkFullNameIsNull ? null : (
